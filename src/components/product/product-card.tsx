@@ -1,0 +1,241 @@
+"use client";
+
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Price } from "@/components/ui/price";
+import { ProductCover } from "@/components/product/product-artwork";
+import { Rating } from "@/components/ui/rating";
+import { StockBadge } from "@/components/ui/stock-badge";
+import { ICON_HIT } from "@/components/ui/control";
+import { useLanguage } from "@/context/language-context";
+import { useUi } from "@/context/ui-context";
+import { useWishlist } from "@/context/wishlist-context";
+import { discountPercent } from "@/lib/format";
+import { cn } from "@/lib/cn";
+import type { Product, ProductBadge } from "@/types";
+import { ChevronLeft, ChevronRight, Eye, Heart } from "lucide-react";
+import Link from "next/link";
+import { useEffect, useRef, useState } from "react";
+
+const BADGE_KEYS: Record<ProductBadge, string> = {
+  new: "common.new",
+  bestseller: "common.bestseller",
+  limited: "common.limited",
+  sale: "common.sale",
+  digital: "common.digital",
+  instant: "common.instant",
+  region_locked: "common.regionLocked",
+  topup: "common.topup",
+};
+
+export function ProductCard({ product, layout = "grid" }: { product: Product; layout?: "grid" | "list" }) {
+  const { t, locale } = useLanguage();
+  const { toggle, has } = useWishlist();
+  const { openQuickView } = useUi();
+  const wished = has(product.id);
+  const sale = discountPercent(product.priceJod, product.compareAtPriceJod);
+  const cardBadges = product.badges.filter((badge) => badge !== "digital").slice(0, 2);
+  const start = product.digitalOptions.denominations[0];
+  const region = product.digitalOptions.regions[0];
+
+  return (
+    <article
+      className={cn(
+        "group relative overflow-hidden rounded-[12px] border border-line bg-card transition-colors [@media(hover:hover)]:hover:border-gold/38",
+        layout === "list" ? "grid grid-cols-[88px_1fr] sm:grid-cols-[180px_1fr]" : "flex h-full flex-col",
+      )}
+    >
+      <Link href={`/product/${product.slug}`} className="relative block overflow-hidden">
+        <div className="transition-transform duration-500 [@media(hover:hover)]:group-hover:scale-[1.04]">
+          <ProductCover
+            product={product}
+            label={locale === "ar" ? product.nameAr : product.name}
+            showTypeBadge={false}
+            className={layout === "list" ? "aspect-[4/3] h-full min-h-[88px] sm:min-h-[120px]" : undefined}
+          />
+        </div>
+        <div className="pointer-events-none absolute inset-x-3 top-3 z-10 flex flex-wrap gap-1.5">
+          {cardBadges.map((badge) => (
+            <Badge key={badge} badge={badge} label={t(BADGE_KEYS[badge])} />
+          ))}
+          {sale && !cardBadges.includes("sale") ? <Badge badge="sale" label={`-${sale}%`} /> : null}
+        </div>
+      </Link>
+      <div className="flex flex-1 flex-col p-3 sm:p-4">
+        <p className="text-[10px] font-semibold uppercase tracking-wide text-muted sm:text-[11px]">
+          {locale === "ar" ? product.digitalOptions.platformLabelAr : product.digitalOptions.platformLabel}
+          {region ? ` · ${locale === "ar" ? region.nameAr : region.name}` : ""}
+        </p>
+        <Link href={`/product/${product.slug}`} className="mt-1 line-clamp-2 min-h-9 text-[13px] font-semibold leading-5 sm:min-h-10 sm:text-sm">
+          {locale === "ar" ? product.nameAr : product.name}
+        </Link>
+        {start ? (
+          <p className="mt-1 hidden text-xs text-muted sm:block">{locale === "ar" ? start.labelAr : start.label}</p>
+        ) : null}
+        <div className="mt-2 hidden sm:block">
+          <Rating value={product.rating} count={product.reviewCount} reviewsLabel={t("common.reviews")} />
+        </div>
+        <div className="mt-2 flex items-end justify-between gap-2 sm:mt-3 sm:gap-3">
+          <Price amount={product.priceJod} compareAt={product.compareAtPriceJod} locale={locale} />
+          <span className="hidden sm:inline">
+            <StockBadge
+              inStock={product.inStock}
+              inLabel={t("common.inStock")}
+              lowLabel={t("common.lowStock")}
+              outLabel={t("common.outOfStock")}
+            />
+          </span>
+        </div>
+        <div className="mt-auto flex items-center gap-2 pt-3 sm:pt-4">
+          <Button href={`/product/${product.slug}`} className="h-10 min-h-10 flex-1 px-2 text-xs sm:h-11 sm:min-h-11 sm:px-4 sm:text-sm">
+            {t("common.viewOptions")}
+          </Button>
+          <button
+            type="button"
+            className={cn(ICON_HIT, "h-10 w-10 border border-line bg-elevated sm:h-11 sm:w-11", wished && "text-gold")}
+            onClick={() => toggle(product.id)}
+            aria-label={t("common.wishlist")}
+            aria-pressed={wished}
+          >
+            <Heart className={cn("h-4 w-4", wished && "fill-gold")} />
+          </button>
+          <button
+            type="button"
+            className={cn(ICON_HIT, "hidden border border-line [@media(hover:hover)]:inline-flex")}
+            onClick={() => openQuickView(product.slug)}
+            aria-label={t("common.quickView")}
+          >
+            <Eye className="h-4 w-4" />
+          </button>
+        </div>
+      </div>
+    </article>
+  );
+}
+
+export function DigitalCard({ product }: { product: Product }) {
+  return <ProductCard product={product} />;
+}
+
+export function ProductGrid({
+  products,
+  view = "grid",
+}: {
+  products: Product[];
+  view?: "grid" | "list";
+}) {
+  return (
+    <div className={cn(view === "list" ? "space-y-3 sm:space-y-4" : "grid grid-cols-2 gap-2.5 sm:gap-3 md:grid-cols-3 md:gap-5 lg:grid-cols-4")}>
+      {products.map((product) => (
+        <ProductCard key={product.id} product={product} layout={view} />
+      ))}
+    </div>
+  );
+}
+
+export function ProductRail({ products }: { products: Product[] }) {
+  const { t } = useLanguage();
+  const scroller = useRef<HTMLDivElement>(null);
+  const [canPrev, setCanPrev] = useState(false);
+  const [canNext, setCanNext] = useState(products.length > 1);
+  const [overflow, setOverflow] = useState(products.length > 1);
+
+  useEffect(() => {
+    const el = scroller.current;
+    if (!el) return;
+
+    const sync = () => {
+      const first = el.firstElementChild;
+      const last = el.lastElementChild;
+      if (!(first instanceof HTMLElement) || !(last instanceof HTMLElement)) {
+        setOverflow(false);
+        setCanPrev(false);
+        setCanNext(false);
+        return;
+      }
+      const box = el.getBoundingClientRect();
+      const firstBox = first.getBoundingClientRect();
+      const lastBox = last.getBoundingClientRect();
+      const rtl = getComputedStyle(el).direction === "rtl";
+      const prev = rtl ? firstBox.right > box.right + 4 : firstBox.left < box.left - 4;
+      const next = rtl ? lastBox.left < box.left - 4 : lastBox.right > box.right + 4;
+      setCanPrev(prev);
+      setCanNext(next);
+      setOverflow(prev || next);
+    };
+
+    const observer = new ResizeObserver(sync);
+    observer.observe(el);
+    el.addEventListener("scroll", sync, { passive: true });
+    window.addEventListener("resize", sync);
+    return () => {
+      observer.disconnect();
+      el.removeEventListener("scroll", sync);
+      window.removeEventListener("resize", sync);
+    };
+  }, [products]);
+
+  const scrollByCard = (direction: 1 | -1) => {
+    const el = scroller.current;
+    if (!el) return;
+    const card = el.firstElementChild;
+    const amount = (card instanceof HTMLElement ? card.offsetWidth : el.clientWidth * 0.8) + 16;
+    const rtl = getComputedStyle(el).direction === "rtl";
+    el.scrollBy({ left: (rtl ? -direction : direction) * amount, behavior: "smooth" });
+  };
+
+  if (products.length === 0) return null;
+
+  return (
+    <div className="relative">
+      <div
+        ref={scroller}
+        className="no-scrollbar flex snap-x snap-mandatory gap-4 overflow-x-auto scroll-smooth px-1 pb-1"
+      >
+        {products.map((product) => (
+          <div
+            key={product.id}
+            className="w-[min(240px,82vw)] shrink-0 snap-start sm:w-[calc((100%-1rem)/2.15)] lg:w-[calc((100%-3rem)/4.35)]"
+          >
+            <ProductCard product={product} />
+          </div>
+        ))}
+      </div>
+
+      {overflow ? (
+        <>
+          {canNext ? (
+            <div className="pointer-events-none absolute inset-y-0 end-0 hidden w-14 bg-gradient-to-l from-deep to-transparent sm:block rtl:bg-gradient-to-r" />
+          ) : null}
+          {canPrev ? (
+            <div className="pointer-events-none absolute inset-y-0 start-0 hidden w-14 bg-gradient-to-r from-deep to-transparent sm:block rtl:bg-gradient-to-l" />
+          ) : null}
+          <button
+            type="button"
+            className={cn(
+              ICON_HIT,
+              "absolute start-1 top-1/2 z-10 hidden -translate-y-1/2 border border-white/15 bg-deep/90 text-fg shadow-lg backdrop-blur hover:border-gold hover:text-gold disabled:pointer-events-none disabled:opacity-30 sm:inline-flex",
+            )}
+            onClick={() => scrollByCard(-1)}
+            disabled={!canPrev}
+            aria-label={t("common.previous")}
+          >
+            <ChevronLeft className="h-5 w-5 rtl:rotate-180" />
+          </button>
+          <button
+            type="button"
+            className={cn(
+              ICON_HIT,
+              "absolute end-1 top-1/2 z-10 hidden -translate-y-1/2 border border-white/15 bg-deep/90 text-fg shadow-lg backdrop-blur hover:border-gold hover:text-gold disabled:pointer-events-none disabled:opacity-30 sm:inline-flex",
+            )}
+            onClick={() => scrollByCard(1)}
+            disabled={!canNext}
+            aria-label={t("common.next")}
+          >
+            <ChevronRight className="h-5 w-5 rtl:rotate-180" />
+          </button>
+        </>
+      ) : null}
+    </div>
+  );
+}

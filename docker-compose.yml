@@ -1,0 +1,21 @@
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: mmh-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: mmh_development
+      POSTGRES_USER: mmh
+      POSTGRES_PASSWORD: mmh_dev_only
+    ports:
+      - "5432:5432"
+    volumes:
+      - mmh_pg_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U mmh -d mmh_development"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+volumes:
+  mmh_pg_data:
