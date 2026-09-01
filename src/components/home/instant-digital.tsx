@@ -1,13 +1,13 @@
 "use client";
 
-import { ProductArtwork } from "@/components/product/product-artwork";
+import { ProductCover } from "@/components/product/product-artwork";
 import { SectionHeading } from "@/components/ui/section-heading";
 import { Price } from "@/components/ui/price";
 import { getProductById } from "@/data/products";
 import { useLanguage } from "@/context/language-context";
 import Link from "next/link";
 
-const IDS = ["psn-store", "steam-wallet", "ea-fc-points", "pubg-uc", "xbox-gift", "roblox-card"];
+const IDS = ["psn-store", "steam-wallet", "ea-fc-points", "pubg-uc", "xbox-gift", "roblox-card"] as const;
 
 export function InstantDigital() {
   const { t, locale } = useLanguage();
@@ -24,22 +24,43 @@ export function InstantDigital() {
           actionLabel={t("common.viewAll")}
         />
         <div className="grid grid-cols-2 gap-3 md:grid-cols-3 lg:grid-cols-6">
-          {cards.map((product) => (
-            <Link
-              key={product.id}
-              href={`/product/${product.slug}`}
-              className="overflow-hidden rounded-[12px] border border-line bg-card transition-colors hover:border-gold/38"
-            >
-              <ProductArtwork product={product} className="aspect-[4/5]" />
-              <div className="p-3">
-                <p className="line-clamp-2 min-h-10 text-sm font-semibold leading-5">{locale === "ar" ? product.nameAr : product.name}</p>
-                <p className="mt-1 text-[11px] text-muted">
-                  {product.digitalOptions?.regions[1]?.name} · {product.digitalOptions?.denominations[1]?.label}
-                </p>
-                <Price amount={product.priceJod} locale={locale} size="sm" className="mt-2" />
-              </div>
-            </Link>
-          ))}
+          {cards.map((product) => {
+            const region = product.digitalOptions.regions[0];
+            const denom = product.digitalOptions.denominations[0];
+            return (
+              <Link
+                key={product.id}
+                href={`/product/${product.slug}`}
+                className="group overflow-hidden rounded-[12px] border border-line bg-card transition-colors hover:border-gold/38"
+              >
+                <div className="overflow-hidden">
+                  <ProductCover
+                    product={product}
+                    src={`/catalog/${product.id}.webp`}
+                    label={locale === "ar" ? product.nameAr : product.name}
+                    className="aspect-[4/5] transition-transform duration-300 group-hover:scale-[1.03]"
+                  />
+                </div>
+                <div className="p-3">
+                  <p className="text-[10px] font-semibold uppercase tracking-wide text-muted">
+                    {locale === "ar" ? product.digitalOptions.platformLabelAr : product.digitalOptions.platformLabel}
+                  </p>
+                  <p className="mt-1 line-clamp-2 min-h-10 text-sm font-semibold leading-5">
+                    {locale === "ar" ? product.nameAr : product.name}
+                  </p>
+                  <p className="mt-1 text-[11px] text-muted">
+                    {[
+                      region ? (locale === "ar" ? region.nameAr : region.name) : null,
+                      denom ? (locale === "ar" ? denom.labelAr : denom.label) : null,
+                    ]
+                      .filter(Boolean)
+                      .join(" · ")}
+                  </p>
+                  <Price amount={product.priceJod} locale={locale} size="sm" className="mt-2" />
+                </div>
+              </Link>
+            );
+          })}
         </div>
       </div>
     </section>

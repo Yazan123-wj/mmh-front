@@ -25,8 +25,8 @@ export const SITE = {
     youtube: "#",
   },
   delivery: {
-    estimate: "Usually instant after successful payment",
-    estimateAr: "عادةً فوري بعد نجاح الدفع",
+    estimate: "Issued after payment is confirmed. Live PIN delivery is not enabled in this environment.",
+    estimateAr: "يُصدر بعد تأكيد الدفع. تسليم الأرقام الحية غير مفعّل في هذه البيئة.",
     topupEstimate: "Submitted for processing after checkout",
     topupEstimateAr: "يُرسل للمعالجة بعد إتمام الطلب",
   },

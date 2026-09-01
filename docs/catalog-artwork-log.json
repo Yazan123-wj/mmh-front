@@ -1,0 +1,408 @@
+{
+  "retrievedAt": "2026-09-01T15:51:55.758Z",
+  "supplierCatalog": "skipped: 1Epin credentials are not used in this enrichment pass (live purchasing stays locked; catalog image feed was not requested against the supplier).",
+  "assets": [
+    {
+      "productId": "psn-store",
+      "slug": "playstation-store-wallet",
+      "url": "/catalog/psn-store.svg",
+      "sourceUrl": "https://upload.wikimedia.org/wikipedia/commons/0/00/PlayStation_logo.svg",
+      "sourcePageUrl": "https://commons.wikimedia.org/wiki/File:PlayStation_logo.svg",
+      "retrievedAt": "2026-09-01T15:51:55.758Z",
+      "license": "Public domain (PD-textlogo / PD-shape); trademarked",
+      "permissionNote": "Wikimedia Commons lists this file as public-domain text or shape. The depicted mark remains a trademark of its owner. MMH stores a copy only as nominative identification on a solid-color tile. This is not official gift-card photography, not denomination-specific, and is not an endorsement. A source URL is not proof of a commercial license.",
+      "artworkKind": "generic-identification",
+      "denominationSpecific": false,
+      "preservePrices": true
+    },
+    {
+      "productId": "steam-wallet",
+      "slug": "steam-wallet",
+      "url": "/catalog/steam-wallet.svg",
+      "sourceUrl": "https://upload.wikimedia.org/wikipedia/commons/8/83/Steam_icon_logo.svg",
+      "sourcePageUrl": "https://commons.wikimedia.org/wiki/File:Steam_icon_logo.svg",
+      "retrievedAt": "2026-09-01T15:51:55.758Z",
+      "license": "Public domain (PD-textlogo / PD-shape); trademarked",
+      "permissionNote": "Wikimedia Commons lists this file as public-domain text or shape. The depicted mark remains a trademark of its owner. MMH stores a copy only as nominative identification on a solid-color tile. This is not official gift-card photography, not denomination-specific, and is not an endorsement. A source URL is not proof of a commercial license. Valve asks that the Steam mark stand alone on a solid field; this tile adds no extra words or objects on the mark.",
+      "artworkKind": "generic-identification",
+      "denominationSpecific": false,
+      "preservePrices": true
+    },
+    {
+      "productId": "xbox-gift",
+      "slug": "xbox-gift-card",
+      "url": "/catalog/xbox-gift.svg",
+      "sourceUrl": "https://upload.wikimedia.org/wikipedia/commons/f/f9/Xbox_one_logo.svg",
+      "sourcePageUrl": "https://commons.wikimedia.org/wiki/File:Xbox_one_logo.svg",
+      "retrievedAt": "2026-09-01T15:51:55.758Z",
+      "license": "Public domain (PD-textlogo / PD-shape); trademarked",
+      "permissionNote": "Wikimedia Commons lists this file as public-domain text or shape. The depicted mark remains a trademark of its owner. MMH stores a copy only as nominative identification on a solid-color tile. This is not official gift-card photography, not denomination-specific, and is not an endorsement. A source URL is not proof of a commercial license.",
+      "artworkKind": "generic-identification",
+      "denominationSpecific": false,
+      "preservePrices": true
+    },
+    {
+      "productId": "nintendo-eshop",
+      "slug": "nintendo-eshop-card",
+      "url": "/catalog/nintendo-eshop.svg",
+      "sourceUrl": "https://upload.wikimedia.org/wikipedia/commons/0/0d/Nintendo.svg",
+      "sourcePageUrl": "https://commons.wikimedia.org/wiki/File:Nintendo.svg",
+      "retrievedAt": "2026-09-01T15:51:55.758Z",
+      "license": "Public domain (PD-textlogo / PD-shape); trademarked",
+      "permissionNote": "Wikimedia Commons lists this file as public-domain text or shape. The depicted mark remains a trademark of its owner. MMH stores a copy only as nominative identification on a solid-color tile. This is not official gift-card photography, not denomination-specific, and is not an endorsement. A source URL is not proof of a commercial license.",
+      "artworkKind": "generic-identification",
+      "denominationSpecific": false,
+      "preservePrices": true
+    },
+    {
+      "productId": "apple-gift",
+      "slug": "apple-gift-card",
+      "url": "/catalog/apple-gift.svg",
+      "sourceUrl": "https://upload.wikimedia.org/wikipedia/commons/f/fa/Apple_logo_black.svg",
+      "sourcePageUrl": "https://commons.wikimedia.org/wiki/File:Apple_logo_black.svg",
+      "retrievedAt": "2026-09-01T15:51:55.758Z",
+      "license": "Public domain (PD-textlogo / PD-shape); trademarked",
+      "permissionNote": "Wikimedia Commons lists this file as public-domain text or shape. The depicted mark remains a trademark of its owner. MMH stores a copy only as nominative identification on a solid-color tile. This is not official gift-card photography, not denomination-specific, and is not an endorsement. A source URL is not proof of a commercial license.",
+      "artworkKind": "generic-identification",
+      "denominationSpecific": false,
+      "preservePrices": true
+    },
+    {
+      "productId": "google-play",
+      "slug": "google-play-gift-card",
+      "url": "/catalog/google-play.svg",
+      "sourceUrl": "https://upload.wikimedia.org/wikipedia/commons/2/2f/Google_Play_2022_icon.svg",
+      "sourcePageUrl": "https://commons.wikimedia.org/wiki/File:Google_Play_2022_icon.svg",
+      "retrievedAt": "2026-09-01T15:51:55.758Z",
+      "license": "Public domain (PD-textlogo / PD-shape); trademarked",
+      "permissionNote": "Wikimedia Commons lists this file as public-domain text or shape. The depicted mark remains a trademark of its owner. MMH stores a copy only as nominative identification on a solid-color tile. This is not official gift-card photography, not denomination-specific, and is not an endorsement. A source URL is not proof of a commercial license.",
+      "artworkKind": "generic-identification",
+      "denominationSpecific": false,
+      "preservePrices": true
+    },
+    {
+      "productId": "razer-gold",
+      "slug": "razer-gold",
+      "url": "/catalog/razer-gold.svg",
+      "sourceUrl": "https://upload.wikimedia.org/wikipedia/commons/5/52/Razer_wordmark.svg",
+      "sourcePageUrl": "https://commons.wikimedia.org/wiki/File:Razer_wordmark.svg",
+      "retrievedAt": "2026-09-01T15:51:55.758Z",
+      "license": "Public domain (PD-textlogo / PD-shape); trademarked",
+      "permissionNote": "Wikimedia Commons lists this file as public-domain text or shape. The depicted mark remains a trademark of its owner. MMH stores a copy only as nominative identification on a solid-color tile. This is not official gift-card photography, not denomination-specific, and is not an endorsement. A source URL is not proof of a commercial license.",
+      "artworkKind": "generic-identification",
+      "denominationSpecific": false,
+      "preservePrices": true
+    },
+    {
+      "productId": "roblox-card",
+      "slug": "roblox-gift-card",
+      "url": "/catalog/roblox-card.svg",
+      "sourceUrl": "https://upload.wikimedia.org/wikipedia/commons/4/4b/Roblox_Logo_2022.svg",
+      "sourcePageUrl": "https://commons.wikimedia.org/wiki/File:Roblox_Logo_2022.svg",
+      "retrievedAt": "2026-09-01T15:51:55.758Z",
+      "license": "Public domain (PD-textlogo / PD-shape); trademarked",
+      "permissionNote": "Wikimedia Commons lists this file as public-domain text or shape. The depicted mark remains a trademark of its owner. MMH stores a copy only as nominative identification on a solid-color tile. This is not official gift-card photography, not denomination-specific, and is not an endorsement. A source URL is not proof of a commercial license.",
+      "artworkKind": "generic-identification",
+      "denominationSpecific": false,
+      "preservePrices": true
+    },
+    {
+      "productId": "pubg-uc",
+      "slug": "pubg-mobile-uc",
+      "url": "/catalog/pubg-uc.svg",
+      "sourceUrl": "https://upload.wikimedia.org/wikipedia/commons/2/27/PUBG_Mobile_simple_logo_black.svg",
+      "sourcePageUrl": "https://commons.wikimedia.org/wiki/File:PUBG_Mobile_simple_logo_black.svg",
+      "retrievedAt": "2026-09-01T15:51:55.758Z",
+      "license": "Public domain (PD-textlogo / PD-shape); trademarked",
+      "permissionNote": "Wikimedia Commons lists this file as public-domain text or shape. The depicted mark remains a trademark of its owner. MMH stores a copy only as nominative identification on a solid-color tile. This is not official gift-card photography, not denomination-specific, and is not an endorsement. A source URL is not proof of a commercial license.",
+      "artworkKind": "generic-identification",
+      "denominationSpecific": false,
+      "preservePrices": true
+    },
+    {
+      "productId": "free-fire",
+      "slug": "free-fire-diamonds",
+      "url": "/catalog/free-fire.svg",
+      "sourceUrl": null,
+      "sourcePageUrl": null,
+      "retrievedAt": "2026-09-01T15:51:55.758Z",
+      "license": "MMH-original identification tile",
+      "permissionNote": "MMH-original identification tile. No permitted official card photograph or public-domain wordmark was available for this SKU. The tile is not a replica of branded card artwork and must not be described as official packaging.",
+      "artworkKind": "name-only-tile",
+      "denominationSpecific": false,
+      "preservePrices": true
+    },
+    {
+      "productId": "mlbb-diamonds",
+      "slug": "mobile-legends-diamonds",
+      "url": "/catalog/mlbb-diamonds.svg",
+      "sourceUrl": null,
+      "sourcePageUrl": null,
+      "retrievedAt": "2026-09-01T15:51:55.758Z",
+      "license": "MMH-original identification tile",
+      "permissionNote": "MMH-original identification tile. No permitted official card photograph or public-domain wordmark was available for this SKU. The tile is not a replica of branded card artwork and must not be described as official packaging.",
+      "artworkKind": "name-only-tile",
+      "denominationSpecific": false,
+      "preservePrices": true
+    },
+    {
+      "productId": "valorant-points",
+      "slug": "valorant-points",
+      "url": "/catalog/valorant-points.svg",
+      "sourceUrl": "https://upload.wikimedia.org/wikipedia/commons/1/11/Valorant_logo_-_black_color_version.svg",
+      "sourcePageUrl": "https://commons.wikimedia.org/wiki/File:Valorant_logo_-_black_color_version.svg",
+      "retrievedAt": "2026-09-01T15:51:55.758Z",
+      "license": "Public domain (PD-textlogo / PD-shape); trademarked",
+      "permissionNote": "Wikimedia Commons lists this file as public-domain text or shape. The depicted mark remains a trademark of its owner. MMH stores a copy only as nominative identification on a solid-color tile. This is not official gift-card photography, not denomination-specific, and is not an endorsement. A source URL is not proof of a commercial license.",
+      "artworkKind": "generic-identification",
+      "denominationSpecific": false,
+      "preservePrices": true
+    },
+    {
+      "productId": "fortnite-vbucks",
+      "slug": "fortnite-v-bucks",
+      "url": "/catalog/fortnite-vbucks.svg",
+      "sourceUrl": "https://upload.wikimedia.org/wikipedia/commons/a/a0/Fortnite_logo_2.svg",
+      "sourcePageUrl": "https://commons.wikimedia.org/wiki/File:Fortnite_logo_2.svg",
+      "retrievedAt": "2026-09-01T15:51:55.758Z",
+      "license": "Public domain (PD-textlogo / PD-shape); trademarked",
+      "permissionNote": "Wikimedia Commons lists this file as public-domain text or shape. The depicted mark remains a trademark of its owner. MMH stores a copy only as nominative identification on a solid-color tile. This is not official gift-card photography, not denomination-specific, and is not an endorsement. A source URL is not proof of a commercial license.",
+      "artworkKind": "generic-identification",
+      "denominationSpecific": false,
+      "preservePrices": true
+    },
+    {
+      "productId": "ea-fc-points",
+      "slug": "ea-sports-fc-points",
+      "url": "/catalog/ea-fc-points.svg",
+      "sourceUrl": "https://upload.wikimedia.org/wikipedia/commons/6/64/Electronic_Arts_logo_black.svg",
+      "sourcePageUrl": "https://commons.wikimedia.org/wiki/File:Electronic_Arts_logo_black.svg",
+      "retrievedAt": "2026-09-01T15:51:55.758Z",
+      "license": "Public domain (PD-textlogo / PD-shape); trademarked",
+      "permissionNote": "Wikimedia Commons lists this file as public-domain text or shape. The depicted mark remains a trademark of its owner. MMH stores a copy only as nominative identification on a solid-color tile. This is not official gift-card photography, not denomination-specific, and is not an endorsement. A source URL is not proof of a commercial license.",
+      "artworkKind": "generic-identification",
+      "denominationSpecific": false,
+      "preservePrices": true
+    },
+    {
+      "productId": "lol-card",
+      "slug": "league-of-legends-card",
+      "url": "/catalog/lol-card.svg",
+      "sourceUrl": "https://upload.wikimedia.org/wikipedia/commons/d/d8/League_of_Legends_2019_vector.svg",
+      "sourcePageUrl": "https://commons.wikimedia.org/wiki/File:League_of_Legends_2019_vector.svg",
+      "retrievedAt": "2026-09-01T15:51:55.758Z",
+      "license": "Public domain (PD-textlogo / PD-shape); trademarked",
+      "permissionNote": "Wikimedia Commons lists this file as public-domain text or shape. The depicted mark remains a trademark of its owner. MMH stores a copy only as nominative identification on a solid-color tile. This is not official gift-card photography, not denomination-specific, and is not an endorsement. A source URL is not proof of a commercial license.",
+      "artworkKind": "generic-identification",
+      "denominationSpecific": false,
+      "preservePrices": true
+    },
+    {
+      "productId": "ps-plus",
+      "slug": "playstation-plus",
+      "url": "/catalog/ps-plus.svg",
+      "sourceUrl": "https://upload.wikimedia.org/wikipedia/commons/0/00/PlayStation_logo.svg",
+      "sourcePageUrl": "https://commons.wikimedia.org/wiki/File:PlayStation_logo.svg",
+      "retrievedAt": "2026-09-01T15:51:55.758Z",
+      "license": "Public domain (PD-textlogo / PD-shape); trademarked",
+      "permissionNote": "Wikimedia Commons lists this file as public-domain text or shape. The depicted mark remains a trademark of its owner. MMH stores a copy only as nominative identification on a solid-color tile. This is not official gift-card photography, not denomination-specific, and is not an endorsement. A source URL is not proof of a commercial license.",
+      "artworkKind": "generic-identification",
+      "denominationSpecific": false,
+      "preservePrices": true
+    }
+  ],
+  "products": [
+    {
+      "productId": "psn-store",
+      "slug": "playstation-store-wallet",
+      "action": "update",
+      "copy": true,
+      "artwork": "update",
+      "preservePrices": true,
+      "notes": [
+        "Selling prices and variant SKUs will not be changed.",
+        "Artwork is generic brand identification, not denomination-specific card photography."
+      ]
+    },
+    {
+      "productId": "steam-wallet",
+      "slug": "steam-wallet",
+      "action": "update",
+      "copy": true,
+      "artwork": "update",
+      "preservePrices": true,
+      "notes": [
+        "Selling prices and variant SKUs will not be changed.",
+        "Artwork is generic brand identification, not denomination-specific card photography."
+      ]
+    },
+    {
+      "productId": "xbox-gift",
+      "slug": "xbox-gift-card",
+      "action": "update",
+      "copy": true,
+      "artwork": "update",
+      "preservePrices": true,
+      "notes": [
+        "Selling prices and variant SKUs will not be changed.",
+        "Artwork is generic brand identification, not denomination-specific card photography."
+      ]
+    },
+    {
+      "productId": "nintendo-eshop",
+      "slug": "nintendo-eshop-card",
+      "action": "update",
+      "copy": true,
+      "artwork": "update",
+      "preservePrices": true,
+      "notes": [
+        "Selling prices and variant SKUs will not be changed.",
+        "Artwork is generic brand identification, not denomination-specific card photography."
+      ]
+    },
+    {
+      "productId": "apple-gift",
+      "slug": "apple-gift-card",
+      "action": "update",
+      "copy": true,
+      "artwork": "update",
+      "preservePrices": true,
+      "notes": [
+        "Selling prices and variant SKUs will not be changed.",
+        "Artwork is generic brand identification, not denomination-specific card photography."
+      ]
+    },
+    {
+      "productId": "google-play",
+      "slug": "google-play-gift-card",
+      "action": "update",
+      "copy": true,
+      "artwork": "update",
+      "preservePrices": true,
+      "notes": [
+        "Selling prices and variant SKUs will not be changed.",
+        "Artwork is generic brand identification, not denomination-specific card photography."
+      ]
+    },
+    {
+      "productId": "razer-gold",
+      "slug": "razer-gold",
+      "action": "update",
+      "copy": true,
+      "artwork": "update",
+      "preservePrices": true,
+      "notes": [
+        "Selling prices and variant SKUs will not be changed.",
+        "Artwork is generic brand identification, not denomination-specific card photography."
+      ]
+    },
+    {
+      "productId": "roblox-card",
+      "slug": "roblox-gift-card",
+      "action": "update",
+      "copy": true,
+      "artwork": "update",
+      "preservePrices": true,
+      "notes": [
+        "Selling prices and variant SKUs will not be changed.",
+        "Artwork is generic brand identification, not denomination-specific card photography."
+      ]
+    },
+    {
+      "productId": "pubg-uc",
+      "slug": "pubg-mobile-uc",
+      "action": "update",
+      "copy": true,
+      "artwork": "update",
+      "preservePrices": true,
+      "notes": [
+        "Selling prices and variant SKUs will not be changed.",
+        "Artwork is generic brand identification, not denomination-specific card photography."
+      ]
+    },
+    {
+      "productId": "free-fire",
+      "slug": "free-fire-diamonds",
+      "action": "update",
+      "copy": true,
+      "artwork": "name-only-fallback",
+      "preservePrices": true,
+      "notes": [
+        "Selling prices and variant SKUs will not be changed.",
+        "Official card photography is unavailable; using an MMH name-only tile."
+      ]
+    },
+    {
+      "productId": "mlbb-diamonds",
+      "slug": "mobile-legends-diamonds",
+      "action": "update",
+      "copy": true,
+      "artwork": "name-only-fallback",
+      "preservePrices": true,
+      "notes": [
+        "Selling prices and variant SKUs will not be changed.",
+        "Official card photography is unavailable; using an MMH name-only tile."
+      ]
+    },
+    {
+      "productId": "valorant-points",
+      "slug": "valorant-points",
+      "action": "update",
+      "copy": true,
+      "artwork": "update",
+      "preservePrices": true,
+      "notes": [
+        "Selling prices and variant SKUs will not be changed.",
+        "Artwork is generic brand identification, not denomination-specific card photography."
+      ]
+    },
+    {
+      "productId": "fortnite-vbucks",
+      "slug": "fortnite-v-bucks",
+      "action": "update",
+      "copy": true,
+      "artwork": "update",
+      "preservePrices": true,
+      "notes": [
+        "Selling prices and variant SKUs will not be changed.",
+        "Artwork is generic brand identification, not denomination-specific card photography."
+      ]
+    },
+    {
+      "productId": "ea-fc-points",
+      "slug": "ea-sports-fc-points",
+      "action": "update",
+      "copy": true,
+      "artwork": "update",
+      "preservePrices": true,
+      "notes": [
+        "Selling prices and variant SKUs will not be changed.",
+        "Artwork is generic brand identification, not denomination-specific card photography."
+      ]
+    },
+    {
+      "productId": "lol-card",
+      "slug": "league-of-legends-card",
+      "action": "update",
+      "copy": true,
+      "artwork": "update",
+      "preservePrices": true,
+      "notes": [
+        "Selling prices and variant SKUs will not be changed.",
+        "Artwork is generic brand identification, not denomination-specific card photography."
+      ]
+    },
+    {
+      "productId": "ps-plus",
+      "slug": "playstation-plus",
+      "action": "update",
+      "copy": true,
+      "artwork": "update",
+      "preservePrices": true,
+      "notes": [
+        "Selling prices and variant SKUs will not be changed.",
+        "Artwork is generic brand identification, not denomination-specific card photography."
+      ]
+    }
+  ]
+}

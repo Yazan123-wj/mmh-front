@@ -1,5 +1,5 @@
 export const REGIONS = [
-  { id: "global", name: "Global", nameAr: "عالمي", currency: "USD", locked: false },
+  { id: "global", name: "In-game account", nameAr: "حساب داخل اللعبة", currency: "USD", locked: false },
   { id: "us", name: "United States", nameAr: "الولايات المتحدة", currency: "USD", locked: true },
   { id: "eu", name: "Europe", nameAr: "أوروبا", currency: "EUR", locked: true },
   { id: "uae", name: "UAE / MENA", nameAr: "الإمارات / الشرق الأوسط", currency: "USD", locked: true },

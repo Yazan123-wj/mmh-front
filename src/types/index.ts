@@ -59,6 +59,7 @@ export interface DigitalRegion {
 
 export interface DigitalDenomination {
   id: string;
+  regionId?: string;
   label: string;
   labelAr: string;
   value: number;

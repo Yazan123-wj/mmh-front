@@ -1,17 +1,15 @@
 "use client";
 
 import { Button } from "@/components/ui/button";
-import { ProductArtwork } from "@/components/product/product-artwork";
-import { getProductById } from "@/data/products";
 import { useLanguage } from "@/context/language-context";
 import { motion, useReducedMotion } from "framer-motion";
+import Image from "next/image";
+
+const HERO_IMAGE = "/home/hero.png";
 
 export function Hero() {
   const { t } = useLanguage();
   const reduce = useReducedMotion();
-  const psn = getProductById("psn-store")!;
-  const roblox = getProductById("roblox-card")!;
-  const pubg = getProductById("pubg-uc")!;
 
   return (
     <section className="relative overflow-hidden border-b border-line">
@@ -44,32 +42,24 @@ export function Hero() {
             <span className="rounded-md border border-gold/30 bg-gold/10 px-2 py-1 text-gold">Instant codes</span>
           </div>
         </motion.div>
-        <div className="relative mx-auto w-full max-w-[520px] sm:h-[420px]">
-          <motion.div
-            className="relative w-full overflow-hidden rounded-[14px] border border-line glow-purple sm:absolute sm:start-8 sm:top-6 sm:w-[58%]"
-            initial={reduce ? false : { opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.1 }}
-          >
-            <ProductArtwork product={psn} />
-          </motion.div>
-          <motion.div
-            className="absolute end-4 top-24 hidden w-[42%] overflow-hidden rounded-[14px] border border-line sm:block"
-            initial={reduce ? false : { opacity: 0, y: 24 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.2 }}
-          >
-            <ProductArtwork product={roblox} />
-          </motion.div>
-          <motion.div
-            className="absolute bottom-4 start-16 hidden w-[36%] overflow-hidden rounded-[14px] border border-gold/30 sm:block"
-            initial={reduce ? false : { opacity: 0, y: 24 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.3 }}
-          >
-            <ProductArtwork product={pubg} />
-          </motion.div>
-        </div>
+        <motion.div
+          className="relative mx-auto w-full max-w-[520px]"
+          initial={reduce ? false : { opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.12, duration: 0.55 }}
+        >
+          <div className="overflow-hidden rounded-[14px] border border-line bg-[#17182B] glow-purple">
+            <Image
+              src={HERO_IMAGE}
+              alt="PlayStation, Roblox, and PUBG Mobile digital products at MMH"
+              width={1040}
+              height={840}
+              priority
+              className="h-auto w-full object-cover"
+              sizes="(max-width: 1024px) 100vw, 520px"
+            />
+          </div>
+        </motion.div>
       </div>
     </section>
   );

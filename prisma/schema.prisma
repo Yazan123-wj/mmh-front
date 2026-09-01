@@ -534,16 +534,23 @@ model FAQTranslation {
 }
 
 model MediaAsset {
-  id           String         @id @default(cuid())
-  filename     String
-  storedName   String         @unique
-  mimeType     String
-  byteSize     Int
-  width        Int?
-  height       Int?
-  url          String
-  createdAt    DateTime       @default(now())
-  productMedia ProductMedia[]
+  id             String         @id @default(cuid())
+  filename       String
+  storedName     String         @unique
+  mimeType       String
+  byteSize       Int
+  width          Int?
+  height         Int?
+  url            String
+  sourceUrl      String?
+  sourcePageUrl  String?
+  retrievedAt    DateTime?
+  license        String?
+  permissionNote String?        @db.Text
+  artworkKind    String?
+  mappedProductId String?
+  createdAt      DateTime       @default(now())
+  productMedia   ProductMedia[]
 }
 
 model Order {

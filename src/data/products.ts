@@ -68,7 +68,7 @@ function walletRegions(locked = true): DigitalRegion[] {
 }
 
 function globalRegion(): DigitalRegion[] {
-  return [{ id: "global", name: "Global", nameAr: "عالمي", locked: false, currency: "USD" }];
+  return [{ id: "global", name: "In-game account", nameAr: "حساب داخل اللعبة", locked: false }];
 }
 
 function codeOptions(input: {
@@ -95,14 +95,14 @@ function codeOptions(input: {
     denominations: input.denominations.map((item) => ({
       ...item,
       inStock: item.inStock ?? true,
-      deliveryEstimate: item.deliveryEstimate ?? "Usually instant after successful payment",
+      deliveryEstimate: item.deliveryEstimate ?? "Issued after payment is confirmed. Live PIN delivery is not enabled in this environment.",
     })),
     deliveryMethods: ["account", "email", "sms"],
-    deliveryEstimate: "Usually instant after successful payment",
-    deliveryEstimateAr: "عادةً فوري بعد نجاح الدفع",
+    deliveryEstimate: "Issued after payment is confirmed. Live PIN delivery is not enabled in this environment.",
+    deliveryEstimateAr: "يُصدر بعد تأكيد الدفع. تسليم الأرقام الحية غير مفعّل في هذه البيئة.",
     instructions:
       input.instructions ??
-      "Redeem the PIN in the official store of the selected platform. Match the region and currency to the receiving account. MMH does not generate a live code in this frontend demo.",
+      "Redeem the PIN in the official store of the selected platform. Match the region and currency to the receiving account. MMH does not generate a live code in this environment.",
     instructionsAr:
       input.instructionsAr ??
       "استرد الرقم السري في المتجر الرسمي للمنصة المختارة. طابق المنطقة والعملة مع الحساب المستلم. إم إم إتش لا يولّد كوداً حياً في هذا العرض.",
@@ -179,9 +179,11 @@ function digital(
   return {
     type: "digital",
     inStock: input.inStock ?? true,
-    images: input.images ?? [],
     ...input,
+    images: input.images ?? [`/catalog/${input.id}.webp`, `/catalog/${input.id}.svg`],
     priceJod: input.priceJod || first?.priceJod || 0,
+    rating: 0,
+    reviewCount: 0,
     badges: Array.from(
       new Set<ProductBadge>([
         "digital",
@@ -547,12 +549,12 @@ export const PRODUCTS: Product[] = [
     fulfillmentType: "code",
     name: "Roblox Gift Card",
     nameAr: "بطاقة هدايا روبلوكس",
-    shortDescription: "Official-style Roblox PIN for Robux and eligible purchases.",
-    shortDescriptionAr: "رقم روبلوكس لروبوكس والمشتريات المؤهلة.",
+    shortDescription: "Roblox gift-card PIN for Robux and eligible Roblox purchases. This is a redeemable code, not a direct Robux top-up.",
+    shortDescriptionAr: "رقم بطاقة هدايا روبلوكس لروبوكس والمشتريات المؤهلة. هذا كود قابل للاسترداد وليس شحن روبوكس مباشراً.",
     description:
-      "Roblox gift cards sold by MMH. Verify that the gift-card currency matches your Roblox account before purchasing. MMH is not affiliated with Roblox Corporation.",
+      "Roblox gift cards sold by MMH as redeemable PIN codes. This is not a direct Robux account top-up. Confirm that the gift-card currency matches the Roblox account before purchasing. MMH is not affiliated with Roblox Corporation.",
     descriptionAr:
-      "بطاقات روبلوكس تُباع عبر إم إم إتش. تأكد أن عملة البطاقة تطابق حساب روبلوكس قبل الشراء. إم إم إتش غير مرتبط بروبلوكس.",
+      "بطاقات روبلوكس تُباع عبر إم إم إتش كأكواد PIN قابلة للاسترداد. هذا ليس شحن روبوكس مباشراً إلى الحساب. تأكد أن عملة البطاقة تطابق حساب روبلوكس قبل الشراء. إم إم إتش غير مرتبط بروبلوكس.",
     brand: "Roblox",
     category: "roblox",
     artworkKey: "card-roblox",
@@ -609,9 +611,9 @@ export const PRODUCTS: Product[] = [
     shortDescription: "Direct UC packages credited to a PUBG Mobile Player ID.",
     shortDescriptionAr: "باقات UC تُشحن مباشرة إلى معرّف لاعب ببجي موبايل.",
     description:
-      "PUBG Mobile UC sold by MMH as a direct top-up. Enter the correct Player ID. Balance is added later through a provider in Phase 2. MMH is not affiliated with PUBG or Krafton.",
+      "PUBG Mobile UC sold by MMH as a direct Player ID top-up, not a redeemable UC code. Enter the correct Player ID. Account region is determined by the game account, not by the customer's country of purchase. MMH is not affiliated with PUBG or Krafton.",
     descriptionAr:
-      "شدات ببجي موبايل تُباع عبر إم إم إتش كشحن مباشر. أدخل معرّف اللاعب الصحيح. يُضاف الرصيد لاحقاً عبر مزوّد في المرحلة الثانية. إم إم إتش غير مرتبط بببجي.",
+      "شدات ببجي موبايل تُباع عبر إم إم إتش كشحن مباشر إلى معرّف اللاعب، وليست كود UC قابل للاسترداد. أدخل معرّف اللاعب الصحيح. منطقة الحساب تُحدد من حساب اللعبة وليس من بلد الشراء. إم إم إتش غير مرتبط بببجي.",
     brand: "PUBG",
     category: "pubg-mobile",
     artworkKey: "card-pubg",

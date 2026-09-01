@@ -68,7 +68,7 @@ export function mapProduct(row: ProductRecord): Product {
       name: ren?.name ?? variant.region.slug,
       nameAr: rar?.name ?? ren?.name ?? variant.region.slug,
       locked: variant.region.locked,
-      currency: variant.region.currency,
+      currency: row.fulfillmentType === "DIRECT_TOPUP" && variant.region.slug === "global" ? undefined : variant.region.currency,
     });
   }
   const fields: RequiredCustomerField[] = row.fields
@@ -129,6 +129,7 @@ export function mapProduct(row: ProductRecord): Product {
         const varl = variant.translations.find((item) => item.locale === "ar");
         return {
           id: variant.id,
+          regionId: variant.region?.slug,
           label: ven?.name ?? variant.packageValue,
           labelAr: varl?.name ?? ven?.name ?? variant.packageValue,
           value: Number(variant.denomination),
@@ -139,8 +140,8 @@ export function mapProduct(row: ProductRecord): Product {
         };
       }),
       deliveryMethods: row.fulfillmentType === "DIRECT_TOPUP" ? ["account"] : ["email", "sms", "account"],
-      deliveryEstimate: row.deliveryEstimateEn ?? "Usually minutes after payment.",
-      deliveryEstimateAr: row.deliveryEstimateAr ?? "عادة خلال دقائق بعد الدفع.",
+      deliveryEstimate: row.deliveryEstimateEn ?? "Issued after payment is confirmed. Live PIN delivery is not enabled in this environment.",
+      deliveryEstimateAr: row.deliveryEstimateAr ?? "يُصدر بعد تأكيد الدفع. تسليم الأرقام الحية غير مفعّل في هذه البيئة.",
       instructions: en?.instructions ?? "",
       instructionsAr: ar?.instructions ?? "",
       howToUse: en?.howToUse ?? [],

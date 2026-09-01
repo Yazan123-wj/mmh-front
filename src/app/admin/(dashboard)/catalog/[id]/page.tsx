@@ -89,7 +89,7 @@ export default async function ProductEditorPage({ params }: { params: Promise<{ 
           {product.media.map((item) => (
             <div key={item.id} className="h-24 w-24 overflow-hidden rounded-lg border border-[#E7EAF1] bg-[#F5F7FB]">
               {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img src={item.url} alt={item.alt ?? ""} className="h-full w-full object-cover" />
+              <img src={item.url} alt={item.alt ?? ""} className="h-full w-full object-contain p-1" />
             </div>
           ))}
         </div>

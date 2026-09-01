@@ -1,6 +1,8 @@
+"use client";
+
 import type { Product } from "@/types";
 import { cn } from "@/lib/cn";
-import { useId } from "react";
+import { useId, useState } from "react";
 
 const PALETTES: Record<string, { a: string; b: string; c: string }> = {
   pc: { a: "#565895", b: "#22233D", c: "#F7C037" },
@@ -243,14 +245,18 @@ export function ProductCover({
   src?: string;
 }) {
   const photo = src ?? product.images[0];
-  if (photo) {
+  const [failed, setFailed] = useState(false);
+  if (photo && !failed) {
     return (
       <div className={cn("relative aspect-square overflow-hidden bg-[#17182B]", className)}>
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img
           src={photo}
           alt={label ?? product.name}
-          className={cn("h-full w-full", shot === "cover" ? "object-cover" : "object-contain p-3")}
+          width={720}
+          height={720}
+          className="h-full w-full object-contain p-4"
+          onError={() => setFailed(true)}
         />
         {showTypeBadge && product.type === "digital" ? (
           <span className="absolute start-3 top-3 rounded-md bg-gold/15 px-2 py-1 text-[10px] font-semibold uppercase tracking-wide text-gold">

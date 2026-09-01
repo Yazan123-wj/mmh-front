@@ -1,4 +1,6 @@
 import { PrismaClient, type AdminRole, type ProductKind } from "@prisma/client";
+import { existsSync } from "fs";
+import path from "path";
 import { hashPassword, validatePasswordStrength } from "../src/server/auth/password";
 import { jodToFils } from "../src/server/money";
 import { encryptSecret, maskSecret } from "../src/server/crypto/codes";
@@ -8,6 +10,7 @@ import { CATEGORIES } from "../src/data/categories";
 import { PLATFORMS } from "../src/data/platforms";
 import { REGIONS } from "../src/data/regions";
 import { translations } from "../src/data/translations";
+import { catalogPublicPath, catalogStoredName } from "../src/server/catalog/artwork-sources";
 
 const prisma = new PrismaClient();
 
@@ -130,7 +133,7 @@ async function main() {
     const category = categories.find((item) => item.slug === product.category) ?? categories[0];
     await prisma.product.upsert({
       where: { id: product.id },
-      update: { status: "PUBLISHED", featured: Boolean(product.featured), bestseller: Boolean(product.bestseller) },
+      update: { status: "PUBLISHED", featured: Boolean(product.featured), bestseller: Boolean(product.bestseller), rating: 0, reviewCount: 0 },
       create: {
         id: product.id,
         slug: product.slug,
@@ -203,9 +206,12 @@ async function main() {
         const priceFils = jodToFils(denomination.priceJod);
         const compare = denomination.compareAtPriceJod ? jodToFils(denomination.compareAtPriceJod) : null;
         const costFils = Number((BigInt(priceFils) * BigInt(78)) / BigInt(100));
+        const existingVariant = await prisma.productVariant.findUnique({ where: { sku } });
         await prisma.productVariant.upsert({
           where: { sku },
-          update: { priceFils, compareAtPriceFils: compare, published: denomination.inStock !== false },
+          update: existingVariant?.manualPriceOverride
+            ? { published: denomination.inStock !== false }
+            : { priceFils, compareAtPriceFils: compare, published: denomination.inStock !== false },
           create: {
             productId: product.id,
             regionId: dbRegion?.id,
@@ -225,6 +231,34 @@ async function main() {
               ],
             },
           },
+        });
+      }
+    }
+
+    const catalogFile = path.join(process.cwd(), "public", "catalog", `${product.id}.svg`);
+    if (existsSync(catalogFile)) {
+      const storedName = catalogStoredName(product.id);
+      const url = catalogPublicPath(product.id);
+      const asset = await prisma.mediaAsset.upsert({
+        where: { storedName },
+        update: { url, mimeType: "image/svg+xml", mappedProductId: product.id },
+        create: {
+          filename: storedName,
+          storedName,
+          mimeType: "image/svg+xml",
+          byteSize: 0,
+          width: 720,
+          height: 720,
+          url,
+          artworkKind: "generic-identification",
+          mappedProductId: product.id,
+          permissionNote: "See docs/catalog-artwork-log.json for source and permission notes.",
+        },
+      });
+      const linked = await prisma.productMedia.findFirst({ where: { productId: product.id, url } });
+      if (!linked) {
+        await prisma.productMedia.create({
+          data: { productId: product.id, assetId: asset.id, url, alt: product.name, sortOrder: 0 },
         });
       }
     }

@@ -1,9 +1,10 @@
 "use client";
 
-import { ProductArtwork } from "@/components/product/product-artwork";
+import { ProductCover } from "@/components/product/product-artwork";
 import { Button } from "@/components/ui/button";
 import { Price } from "@/components/ui/price";
 import { getProductById } from "@/data/products";
+import { uniqueFaceValues } from "@/lib/digital-options";
 import { useLanguage } from "@/context/language-context";
 import { choiceClass } from "@/components/ui/control";
 import { useState } from "react";
@@ -11,8 +12,9 @@ import { useState } from "react";
 export function FeaturedStory() {
   const product = getProductById("psn-store")!;
   const { t, locale } = useLanguage();
-  const [denominationId, setDenominationId] = useState(product.digitalOptions.denominations[0]?.id ?? "");
-  const denomination = product.digitalOptions.denominations.find((item) => item.id === denominationId);
+  const amounts = uniqueFaceValues(product.digitalOptions.denominations);
+  const [denominationId, setDenominationId] = useState(amounts[0]?.id ?? "");
+  const denomination = amounts.find((item) => item.id === denominationId) ?? product.digitalOptions.denominations.find((item) => item.id === denominationId);
   const highlights = [
     [t("product.platform"), locale === "ar" ? product.digitalOptions.platformLabelAr : product.digitalOptions.platformLabel],
     [t("product.region"), locale === "ar" ? product.digitalOptions.regions[0]?.nameAr : product.digitalOptions.regions[0]?.name],
@@ -24,7 +26,7 @@ export function FeaturedStory() {
     <section className="container-mmh py-10 md:py-16">
       <div className="grid overflow-hidden rounded-[14px] border border-line bg-card lg:grid-cols-2">
         <div className="relative min-h-[220px] bg-deep sm:min-h-[360px]">
-          <ProductArtwork product={product} className="h-full min-h-[220px] sm:min-h-[360px]" />
+          <ProductCover product={product} className="h-full min-h-[220px] sm:min-h-[360px]" />
         </div>
         <div className="flex flex-col justify-center p-5 sm:p-6 md:p-10">
           <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-gold">{t("home.featured")}</p>
@@ -44,7 +46,7 @@ export function FeaturedStory() {
             <Price amount={denomination?.priceJod ?? product.priceJod} compareAt={denomination?.compareAtPriceJod} locale={locale} size="lg" />
           </div>
           <div className="mt-5 flex flex-wrap gap-2">
-            {product.digitalOptions.denominations.map((item) => (
+            {amounts.map((item) => (
               <button
                 key={item.id}
                 type="button"

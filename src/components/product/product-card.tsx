@@ -98,7 +98,9 @@ export function ProductCard({ product, layout = "grid" }: { product: Product; la
           <p className="mt-1 hidden text-xs text-muted sm:block">{locale === "ar" ? start.labelAr : start.label}</p>
         ) : null}
         <div className="mt-2 hidden sm:block">
-          <Rating value={product.rating} count={product.reviewCount} reviewsLabel={t("common.reviews")} />
+          {product.reviewCount > 0 ? (
+            <Rating value={product.rating} count={product.reviewCount} reviewsLabel={t("common.reviews")} />
+          ) : null}
         </div>
         <div className="mt-2 flex items-end justify-between gap-2 sm:mt-3 sm:gap-3">
           <Price amount={product.priceJod} compareAt={product.compareAtPriceJod} locale={locale} />
