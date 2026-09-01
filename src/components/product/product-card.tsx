@@ -58,7 +58,12 @@ export function ProductCard({ product, layout = "grid" }: { product: Product; la
               className={list ? "aspect-auto h-full min-h-[132px] sm:min-h-[200px]" : undefined}
             />
           </div>
-          <div className="pointer-events-none absolute inset-x-2 top-2 z-10 flex flex-wrap gap-1 sm:inset-x-3 sm:top-3 sm:gap-1.5">
+          <div
+            className={cn(
+              "pointer-events-none absolute start-2 top-2 z-10 flex flex-wrap gap-1 sm:start-3 sm:top-3 sm:gap-1.5",
+              list ? "end-2 sm:end-3" : "end-12 sm:end-14",
+            )}
+          >
             {cardBadges.map((badge) => (
               <Badge key={badge} badge={badge} label={t(BADGE_KEYS[badge])} />
             ))}
