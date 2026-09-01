@@ -19,6 +19,7 @@
     "catalog:enrich:dry": "tsx scripts/enrich-catalog.ts --dry-run",
     "catalog:1epin-images": "tsx scripts/import-1epin-images.ts",
     "catalog:1epin-images:dry": "tsx scripts/import-1epin-images.ts --dry-run",
+    "catalog:strip-watermarks": "python3 scripts/strip-catalog-watermarks.py",
     "home:hero": "python3 scripts/build-home-hero.py"
   },
   "dependencies": {

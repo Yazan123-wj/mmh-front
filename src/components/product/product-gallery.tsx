@@ -3,10 +3,11 @@ import { cn } from "@/lib/cn";
 import type { Product } from "@/types";
 
 function preferredCatalogImage(product: Product) {
-  const fromProduct = product.images.find((src) => /\.svg($|\?)/i.test(src));
+  const webp = product.images.find((src) => /\.webp($|\?)/i.test(src));
+  if (webp) return webp;
+  const fromProduct = product.images.find((src) => /\.(svg|png|jpe?g|avif)($|\?)/i.test(src));
   if (fromProduct) return fromProduct;
-  // Prefer local identification tiles on the detail page to avoid supplier watermarks.
-  return `/catalog/${product.id}.svg`;
+  return `/catalog/${product.id}.webp`;
 }
 
 export function ProductGallery({ product, className }: { product: Product; className?: string }) {
