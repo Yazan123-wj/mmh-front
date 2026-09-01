@@ -11,9 +11,9 @@ export function generateStaticParams() {
   return PRODUCTS.map((product) => ({ slug: product.slug }));
 }
 
-async function productFromDb(slug: string) {
+async function resolveProduct(slug: string) {
   const { products } = await hydrateCatalogFromDb();
-  return products.find((item) => item.slug === slug);
+  return products.find((item) => item.slug === slug) ?? PRODUCTS.find((item) => item.slug === slug);
 }
 
 export async function generateMetadata({
@@ -22,7 +22,7 @@ export async function generateMetadata({
   params: Promise<{ slug: string }>;
 }): Promise<Metadata> {
   const { slug } = await params;
-  const product = await productFromDb(slug);
+  const product = await resolveProduct(slug);
   if (!product) return pageMeta("Product", "MMH product");
   return {
     ...pageMeta(product.name, product.shortDescription, `/product/${slug}`),
@@ -35,7 +35,7 @@ export async function generateMetadata({
 
 export default async function ProductPage({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params;
-  const product = await productFromDb(slug);
+  const product = await resolveProduct(slug);
   if (!product) notFound();
   const jsonLd = {
     "@context": "https://schema.org",

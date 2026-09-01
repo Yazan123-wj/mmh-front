@@ -199,9 +199,14 @@ export async function loadPublishedBanners() {
 }
 
 export async function hydrateCatalogFromDb() {
-  const [products, categories] = await Promise.all([loadPublishedCatalog(), loadPublishedCategories()]);
-  const mapped = products.map(mapProduct);
-  const mappedCats = categories.map(mapCategory);
-  setCatalogSnapshot(mapped, mappedCats);
-  return { products: mapped, categories: mappedCats };
+  try {
+    const [products, categories] = await Promise.all([loadPublishedCatalog(), loadPublishedCategories()]);
+    const mapped = products.map(mapProduct);
+    const mappedCats = categories.map(mapCategory);
+    setCatalogSnapshot(mapped, mappedCats);
+    return { products: mapped, categories: mappedCats };
+  } catch {
+    // Frontend preview / missing DATABASE_URL — callers should fall back to static catalog data.
+    return { products: [], categories: [] };
+  }
 }
