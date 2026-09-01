@@ -45,11 +45,11 @@ function Shape({ artworkKey }: { artworkKey: string }) {
   if (artworkKey.includes("card") || artworkKey.includes("gift")) {
     return (
       <g>
-        <rect x="70" y="90" width="220" height="140" rx="16" fill="currentColor" opacity="0.95" />
-        <rect x="86" y="108" width="80" height="10" rx="5" fill="#17182B" opacity="0.45" />
-        <rect x="86" y="128" width="140" height="8" rx="4" fill="#17182B" opacity="0.28" />
-        <circle cx="250" cy="128" r="16" fill="#F7C037" />
-        <rect x="86" y="186" width="110" height="18" rx="6" fill="#17182B" opacity="0.35" />
+        <rect x="32" y="74" width="296" height="204" rx="24" fill="currentColor" opacity="0.96" />
+        <rect x="54" y="100" width="118" height="14" rx="7" fill="#17182B" opacity="0.45" />
+        <rect x="54" y="128" width="188" height="11" rx="5" fill="#17182B" opacity="0.28" />
+        <circle cx="292" cy="126" r="24" fill="#F7C037" />
+        <rect x="54" y="228" width="160" height="24" rx="8" fill="#17182B" opacity="0.35" />
       </g>
     );
   }
@@ -152,9 +152,10 @@ function Shape({ artworkKey }: { artworkKey: string }) {
   );
 }
 
-export type ArtworkShot = "hero" | "angle" | "detail" | "pack";
+export type ArtworkShot = "hero" | "angle" | "detail" | "pack" | "cover";
 
 function shotTransform(shot: ArtworkShot) {
+  if (shot === "cover") return "translate(180 186) scale(1.42) translate(-180 -180)";
   if (shot === "angle") return "translate(22 10) rotate(-16 180 180)";
   if (shot === "detail") return "translate(-88 -52) scale(1.72)";
   if (shot === "pack") return "translate(56 78) scale(0.58)";
@@ -181,7 +182,13 @@ export function ProductArtwork({
   const glow = shot === "angle" ? { cx: 70, cy: 280 } : shot === "detail" ? { cx: 180, cy: 140 } : { cx: 300, cy: 48 };
   return (
     <div className={cn("relative aspect-square overflow-hidden bg-[#17182B]", className)}>
-      <svg viewBox="0 0 360 360" className="h-full w-full rtl:transform-none" role="img" aria-label={label ?? product.name}>
+      <svg
+        viewBox="0 0 360 360"
+        preserveAspectRatio={shot === "cover" ? "xMidYMid slice" : "xMidYMid meet"}
+        className="absolute inset-0 h-full w-full rtl:transform-none"
+        role="img"
+        aria-label={label ?? product.name}
+      >
         <defs>
           <radialGradient id={gradientId} cx={shot === "detail" ? "50%" : "50%"} cy={shot === "angle" ? "70%" : "30%"} r="70%">
             <stop offset="0%" stopColor={palette.a} stopOpacity={shot === "detail" ? "0.55" : "0.38"} />
@@ -240,7 +247,11 @@ export function ProductCover({
     return (
       <div className={cn("relative aspect-square overflow-hidden bg-[#17182B]", className)}>
         {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img src={photo} alt={label ?? product.name} className="h-full w-full object-contain p-3" />
+        <img
+          src={photo}
+          alt={label ?? product.name}
+          className={cn("h-full w-full", shot === "cover" ? "object-cover" : "object-contain p-3")}
+        />
         {showTypeBadge && product.type === "digital" ? (
           <span className="absolute start-3 top-3 rounded-md bg-gold/15 px-2 py-1 text-[10px] font-semibold uppercase tracking-wide text-gold">
             Digital

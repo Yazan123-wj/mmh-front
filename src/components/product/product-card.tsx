@@ -38,30 +38,50 @@ export function ProductCard({ product, layout = "grid" }: { product: Product; la
   const start = product.digitalOptions.denominations[0];
   const region = product.digitalOptions.regions[0];
 
+  const list = layout === "list";
+
   return (
     <article
       className={cn(
         "group relative overflow-hidden rounded-[12px] border border-line bg-card transition-colors [@media(hover:hover)]:hover:border-gold/38",
-        layout === "list" ? "grid grid-cols-[88px_1fr] sm:grid-cols-[180px_1fr]" : "flex h-full flex-col",
+        list ? "grid grid-cols-[112px_minmax(0,1fr)] sm:grid-cols-[200px_minmax(0,1fr)] md:grid-cols-[240px_minmax(0,1fr)]" : "flex h-full flex-col",
       )}
     >
-      <Link href={`/product/${product.slug}`} className="relative block overflow-hidden">
-        <div className="transition-transform duration-500 [@media(hover:hover)]:group-hover:scale-[1.04]">
-          <ProductCover
-            product={product}
-            label={locale === "ar" ? product.nameAr : product.name}
-            showTypeBadge={false}
-            className={layout === "list" ? "aspect-[4/3] h-full min-h-[88px] sm:min-h-[120px]" : undefined}
-          />
-        </div>
-        <div className="pointer-events-none absolute inset-x-3 top-3 z-10 flex flex-wrap gap-1.5">
-          {cardBadges.map((badge) => (
-            <Badge key={badge} badge={badge} label={t(BADGE_KEYS[badge])} />
-          ))}
-          {sale && !cardBadges.includes("sale") ? <Badge badge="sale" label={`-${sale}%`} /> : null}
-        </div>
-      </Link>
-      <div className="flex flex-1 flex-col p-3 sm:p-4">
+      <div className="relative min-h-0 overflow-hidden">
+        <Link href={`/product/${product.slug}`} className="relative block h-full">
+          <div className="h-full transition-transform duration-500 [@media(hover:hover)]:group-hover:scale-[1.04]">
+            <ProductCover
+              product={product}
+              shot="cover"
+              label={locale === "ar" ? product.nameAr : product.name}
+              showTypeBadge={false}
+              className={list ? "aspect-auto h-full min-h-[132px] sm:min-h-[200px]" : undefined}
+            />
+          </div>
+          <div className="pointer-events-none absolute inset-x-2 top-2 z-10 flex flex-wrap gap-1 sm:inset-x-3 sm:top-3 sm:gap-1.5">
+            {cardBadges.map((badge) => (
+              <Badge key={badge} badge={badge} label={t(BADGE_KEYS[badge])} />
+            ))}
+            {sale && !cardBadges.includes("sale") ? <Badge badge="sale" label={`-${sale}%`} /> : null}
+          </div>
+        </Link>
+        {!list ? (
+          <button
+            type="button"
+            className={cn(
+              ICON_HIT,
+              "absolute end-2 top-2 z-20 h-9 w-9 border border-line bg-elevated/90 backdrop-blur sm:end-3 sm:top-3",
+              wished && "text-gold",
+            )}
+            onClick={() => toggle(product.id)}
+            aria-label={t("common.wishlist")}
+            aria-pressed={wished}
+          >
+            <Heart className={cn("h-4 w-4", wished && "fill-gold")} />
+          </button>
+        ) : null}
+      </div>
+      <div className="flex min-w-0 flex-1 flex-col p-3 sm:p-4">
         <p className="text-[10px] font-semibold uppercase tracking-wide text-muted sm:text-[11px]">
           {locale === "ar" ? product.digitalOptions.platformLabelAr : product.digitalOptions.platformLabel}
           {region ? ` · ${locale === "ar" ? region.nameAr : region.name}` : ""}
@@ -86,27 +106,37 @@ export function ProductCard({ product, layout = "grid" }: { product: Product; la
             />
           </span>
         </div>
-        <div className="mt-auto flex items-center gap-2 pt-3 sm:pt-4">
-          <Button href={`/product/${product.slug}`} className="h-10 min-h-10 flex-1 px-2 text-xs sm:h-11 sm:min-h-11 sm:px-4 sm:text-sm">
+        <div className={cn("mt-auto flex items-center gap-2 pt-3 sm:pt-4", list && "flex-wrap")}>
+          <Button
+            href={`/product/${product.slug}`}
+            className={cn(
+              "h-10 min-h-10 whitespace-nowrap px-3 text-center text-xs leading-none sm:h-11 sm:min-h-11 sm:px-4 sm:text-sm",
+              list ? "w-auto min-w-[9.5rem] max-w-full" : "min-w-0 flex-1",
+            )}
+          >
             {t("common.viewOptions")}
           </Button>
-          <button
-            type="button"
-            className={cn(ICON_HIT, "h-10 w-10 border border-line bg-elevated sm:h-11 sm:w-11", wished && "text-gold")}
-            onClick={() => toggle(product.id)}
-            aria-label={t("common.wishlist")}
-            aria-pressed={wished}
-          >
-            <Heart className={cn("h-4 w-4", wished && "fill-gold")} />
-          </button>
-          <button
-            type="button"
-            className={cn(ICON_HIT, "hidden border border-line [@media(hover:hover)]:inline-flex")}
-            onClick={() => openQuickView(product.slug)}
-            aria-label={t("common.quickView")}
-          >
-            <Eye className="h-4 w-4" />
-          </button>
+          {list ? (
+            <>
+              <button
+                type="button"
+                className={cn(ICON_HIT, "h-10 w-10 shrink-0 border border-line bg-elevated sm:h-11 sm:w-11", wished && "text-gold")}
+                onClick={() => toggle(product.id)}
+                aria-label={t("common.wishlist")}
+                aria-pressed={wished}
+              >
+                <Heart className={cn("h-4 w-4", wished && "fill-gold")} />
+              </button>
+              <button
+                type="button"
+                className={cn(ICON_HIT, "hidden h-10 w-10 shrink-0 border border-line sm:inline-flex sm:h-11 sm:w-11")}
+                onClick={() => openQuickView(product.slug)}
+                aria-label={t("common.quickView")}
+              >
+                <Eye className="h-4 w-4" />
+              </button>
+            </>
+          ) : null}
         </div>
       </div>
     </article>
@@ -195,7 +225,7 @@ export function ProductRail({ products }: { products: Product[] }) {
         {products.map((product) => (
           <div
             key={product.id}
-            className="w-[min(240px,82vw)] shrink-0 snap-start sm:w-[calc((100%-1rem)/2.15)] lg:w-[calc((100%-3rem)/4.35)]"
+            className="w-[min(248px,82vw)] shrink-0 snap-start sm:w-[calc((100%-1rem)/2)] lg:w-[calc((100%-3rem)/4)]"
           >
             <ProductCard product={product} />
           </div>
