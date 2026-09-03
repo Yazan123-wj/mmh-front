@@ -54,9 +54,7 @@ export function DigitalProductDetail({ product }: { product: Product }) {
   const [denominationId, setDenominationId] = useState(
     () => denominationsForRegion(product, initialRegion).find((item) => item.inStock !== false)?.id ?? "",
   );
-  const [giftIntent, setGiftIntent] = useState<GiftIntent>("self");
-  const [recipientName, setRecipientName] = useState("");
-  const [recipientEmail, setRecipientEmail] = useState("");
+  const [recipientPhone, setRecipientPhone] = useState("");
   const [giftMessage, setGiftMessage] = useState("");
   const [method, setMethod] = useState<DeliveryMethod>("account");
   const [showDelivery, setShowDelivery] = useState(false);
@@ -73,12 +71,12 @@ export function DigitalProductDetail({ product }: { product: Product }) {
   const denomination = options.denominations.find((item) => item.id === denominationId);
   const region = options.regions.find((item) => item.id === regionId);
   const sale = discountPercent(denomination?.priceJod ?? product.priceJod, denomination?.compareAtPriceJod);
-  const sendingGift = isGift && giftIntent === "recipient";
-  const deliveryMethod: DeliveryMethod = sendingGift ? "email" : method;
-  const deliveryContact = sendingGift ? recipientEmail.trim() : contact;
+  const sendingGift = isGift;
+  const deliveryMethod: DeliveryMethod = sendingGift ? "sms" : method;
+  const deliveryContact = sendingGift ? recipientPhone.trim() : contact;
   const needsContact = deliveryMethod === "email" || deliveryMethod === "sms";
   const contactOk = sendingGift
-    ? isValidEmail(recipientEmail) && recipientName.trim().length >= 2
+    ? isValidDemoPhone(recipientPhone)
     : !needsContact || (deliveryMethod === "email" ? isValidEmail(contact) : isValidDemoPhone(contact));
   const fieldsOk = options.requiredCustomerFields.every((field) =>
     validateCustomerField(field.id, fields[field.id] ?? "", field.required),
@@ -124,9 +122,8 @@ export function DigitalProductDetail({ product }: { product: Product }) {
       deliveryContact: needsContact ? deliveryContact : "",
       platform: platformName,
       customerFields: { ...fields },
-      giftIntent: isGift ? giftIntent : undefined,
-      recipientName: sendingGift ? recipientName.trim() : undefined,
-      recipientEmail: sendingGift ? recipientEmail.trim() : undefined,
+      giftIntent: isGift ? ("recipient" as GiftIntent) : undefined,
+      recipientPhone: sendingGift ? recipientPhone.trim() : undefined,
       giftMessage: sendingGift ? giftMessage.trim() : undefined,
     };
   };
@@ -253,50 +250,26 @@ export function DigitalProductDetail({ product }: { product: Product }) {
             <div className="mt-6">
               <p className="mb-2 text-sm font-medium">{t("gift.who")}</p>
               <p className="mb-3 text-xs leading-5 text-muted">{t("gift.process")}</p>
-              <div className="grid gap-2 sm:grid-cols-2">
-                {(
-                  [
-                    ["self", t("gift.forMe"), t("gift.forMeHint")],
-                    ["recipient", t("gift.send"), t("gift.sendHint")],
-                  ] as const
-                ).map(([value, label, hint]) => (
-                  <button
-                    key={value}
-                    type="button"
-                    aria-pressed={giftIntent === value}
-                    onClick={() => {
-                      setGiftIntent(value);
-                      if (value === "recipient") setMethod("email");
-                    }}
-                    className={choiceClass(giftIntent === value, "px-3 py-3 text-start")}
-                  >
-                    <span className="block text-sm font-medium">{label}</span>
-                    <span className="mt-1 block text-xs leading-5 text-muted">{hint}</span>
-                  </button>
-                ))}
-              </div>
-              {sendingGift ? (
-                <div className="mt-4 space-y-3">
-                  <Field label={t("gift.recipientName")} value={recipientName} onChange={(event) => setRecipientName(event.target.value)} />
-                  <Field
-                    label={t("gift.recipientEmail")}
-                    type="email"
-                    value={recipientEmail}
-                    onChange={(event) => setRecipientEmail(event.target.value)}
-                    placeholder="name@example.com"
-                  />
-                  <label className="block space-y-1.5">
-                    <span className="text-sm font-medium">{t("gift.message")}</span>
-                    <textarea
-                      value={giftMessage}
-                      onChange={(event) => setGiftMessage(event.target.value)}
-                      placeholder={t("gift.messagePlaceholder")}
-                      rows={3}
-                      className="w-full rounded-[12px] border border-line bg-elevated px-3 py-2 text-sm"
-                    />
-                  </label>
-                </div>
-              ) : null}
+              <Field
+                label={t("gift.recipientPhone")}
+                type="tel"
+                inputMode="tel"
+                value={recipientPhone}
+                onChange={(event) => setRecipientPhone(event.target.value)}
+                hint={t("gift.recipientPhoneHint")}
+                placeholder="+962 7X XXX XXXX"
+                error={recipientPhone && !isValidDemoPhone(recipientPhone) ? t("checkout.invalidPhone") : undefined}
+              />
+              <label className="mt-3 block space-y-1.5">
+                <span className="text-sm font-medium">{t("gift.message")}</span>
+                <textarea
+                  value={giftMessage}
+                  onChange={(event) => setGiftMessage(event.target.value)}
+                  placeholder={t("gift.messagePlaceholder")}
+                  rows={3}
+                  className="w-full rounded-[12px] border border-line bg-elevated px-3 py-2 text-sm"
+                />
+              </label>
             </div>
           ) : null}
 

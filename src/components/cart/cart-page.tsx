@@ -72,8 +72,8 @@ export function CartPageView() {
                           : item.digital?.giftIntent === "self"
                             ? t("gift.forMe")
                             : t("common.instant")}
-                      {item.digital?.giftIntent === "recipient" && item.digital.recipientEmail
-                        ? ` · ${item.digital.recipientEmail}`
+                      {item.digital?.giftIntent === "recipient" && (item.digital.recipientPhone || item.digital.deliveryContact)
+                        ? ` · ${item.digital.recipientPhone || item.digital.deliveryContact}`
                         : item.digital?.deliveryContact
                           ? ` · ${item.digital.deliveryContact}`
                           : ""}

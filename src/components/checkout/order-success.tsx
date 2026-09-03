@@ -60,7 +60,7 @@ export function OrderSuccessView() {
                 </p>
                 {isGiftSend ? (
                   <p className="mt-2 text-sm text-muted">
-                    {t("gift.sentTo")} {item.digital?.recipientName} · {item.digital?.recipientEmail}
+                    {t("gift.sentTo")} {item.digital?.recipientPhone || item.digital?.deliveryContact}
                   </p>
                 ) : null}
                 {item.digital?.giftMessage ? <p className="mt-1 text-sm text-muted">“{item.digital.giftMessage}”</p> : null}

@@ -107,7 +107,7 @@ export function CheckoutView() {
                     {product.fulfillmentType === "direct_topup"
                       ? t("common.topup")
                       : item.digital?.giftIntent === "recipient"
-                        ? `${t("gift.sentTo")} ${item.digital.recipientName ?? ""} · ${item.digital.recipientEmail ?? ""}`
+                        ? `${t("gift.sentTo")} ${item.digital.recipientPhone || item.digital.deliveryContact || ""}`
                         : item.digital?.giftIntent === "self"
                           ? t("gift.keptInOrders")
                           : t("common.instant")}

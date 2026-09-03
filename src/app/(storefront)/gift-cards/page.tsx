@@ -19,7 +19,7 @@ export default async function GiftCardsPage({
     <div className="container-mmh py-6 sm:py-10">
       <h1 className="text-2xl font-semibold sm:text-3xl">Gift Cards</h1>
       <p className="mt-2 mb-8 max-w-2xl text-sm text-muted">
-        Buy store credit for yourself or send it as a gift. Choose the account region and amount, decide who receives the PIN, then redeem it in the official store. Codes in this demo are fictional.
+        Buy a card, enter the receiver’s mobile number, pay, then the PIN is sent to that phone. They redeem it in the official store. Codes in this demo are fictional.
       </p>
       <ShopCatalog
         initial={parseFilterParams(params)}
