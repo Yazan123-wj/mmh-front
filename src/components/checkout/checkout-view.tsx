@@ -185,8 +185,8 @@ export function CheckoutView() {
                   }),
                 };
                 try {
-                  const { createPendingOrder } = await import("@/server/actions/admin");
-                  const result = await createPendingOrder(payload);
+                  const { createStorefrontOrder } = await import("@/server/actions/checkout");
+                  const result = await createStorefrontOrder(payload);
                   writeJson(STORAGE_KEYS.checkout, { draft, items, total, createdAt: new Date().toISOString(), orderId: result.orderNumber });
                   clear();
                   router.push("/order-success");

@@ -159,7 +159,7 @@ export async function createPendingOrder(input: unknown) {
   if (!rateLimit(`checkout:${parsed.email}`, 12, 10 * 60 * 1000)) {
     throw new Error("Too many checkout attempts. Try again later.");
   }
-  const session = await auth();
+  const session = await auth().catch(() => null);
   return prisma.$transaction(async (tx) => {
     const existing = await tx.order.findUnique({ where: { idempotencyKey: parsed.idempotencyKey } });
     if (existing) return { orderNumber: existing.number, id: existing.id };
