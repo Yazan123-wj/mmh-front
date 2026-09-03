@@ -167,6 +167,7 @@ export interface CartDigitalMeta {
   giftIntent?: GiftIntent;
   recipientName?: string;
   recipientEmail?: string;
+  recipientPhone?: string;
   giftMessage?: string;
 }
 
