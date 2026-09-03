@@ -104,10 +104,17 @@ export function CheckoutView() {
                     {item.digital?.platform} · {item.digital?.regionName} · {item.digital?.denominationLabel}
                   </p>
                   <p className="text-accent">
-                    {product.fulfillmentType === "direct_topup" ? t("common.topup") : t("common.instant")}
-                    {item.digital?.deliveryContact ? ` · ${item.digital.deliveryContact}` : ""}
+                    {product.fulfillmentType === "direct_topup"
+                      ? t("common.topup")
+                      : item.digital?.giftIntent === "recipient"
+                        ? `${t("gift.sentTo")} ${item.digital.recipientName ?? ""} · ${item.digital.recipientEmail ?? ""}`
+                        : item.digital?.giftIntent === "self"
+                          ? t("gift.keptInOrders")
+                          : t("common.instant")}
+                    {item.digital?.giftIntent !== "recipient" && item.digital?.deliveryContact ? ` · ${item.digital.deliveryContact}` : ""}
                     {player ? ` · ${maskAccountValue(player)}` : ""}
                   </p>
+                  {item.digital?.giftMessage ? <p className="mt-2 text-xs text-muted">“{item.digital.giftMessage}”</p> : null}
                   <p className="mt-2 text-xs text-amber">{t("checkout.refundWarn")}</p>
                   <Link href="/cart" className="mt-2 inline-block text-xs text-gold">{t("common.edit")}</Link>
                 </article>

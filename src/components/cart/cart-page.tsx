@@ -65,8 +65,18 @@ export function CartPageView() {
                       {item.digital?.platform} · {item.digital?.regionName} · {item.digital?.denominationLabel}
                     </p>
                     <p className="text-xs text-muted">
-                      {product.fulfillmentType === "direct_topup" ? t("common.topup") : t("common.instant")}
-                      {item.digital?.deliveryMethod ? ` · ${item.digital.deliveryMethod}` : ""}
+                      {product.fulfillmentType === "direct_topup"
+                        ? t("common.topup")
+                        : item.digital?.giftIntent === "recipient"
+                          ? t("gift.send")
+                          : item.digital?.giftIntent === "self"
+                            ? t("gift.forMe")
+                            : t("common.instant")}
+                      {item.digital?.giftIntent === "recipient" && item.digital.recipientEmail
+                        ? ` · ${item.digital.recipientEmail}`
+                        : item.digital?.deliveryContact
+                          ? ` · ${item.digital.deliveryContact}`
+                          : ""}
                       {player ? ` · ${maskAccountValue(player)}` : ""}
                     </p>
                     <div className="mt-3 flex flex-wrap items-center gap-3">

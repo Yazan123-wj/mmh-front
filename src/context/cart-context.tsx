@@ -56,6 +56,8 @@ export function CartProvider({ children }: { children: ReactNode }) {
             item.productId === payload.productId &&
             item.digital?.denominationId === payload.digital?.denominationId &&
             item.digital?.regionId === payload.digital?.regionId &&
+            item.digital?.giftIntent === payload.digital?.giftIntent &&
+            item.digital?.recipientEmail === payload.digital?.recipientEmail &&
             JSON.stringify(item.digital?.customerFields ?? {}) === JSON.stringify(payload.digital?.customerFields ?? {}),
         );
         if (existing) {

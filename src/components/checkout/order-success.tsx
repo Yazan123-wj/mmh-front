@@ -47,6 +47,7 @@ export function OrderSuccessView() {
           items.map((item) => {
             const product = getProductById(item.productId);
             const isTopup = product?.fulfillmentType === "direct_topup";
+            const isGiftSend = item.digital?.giftIntent === "recipient";
             const player = item.digital?.customerFields?.playerId || item.digital?.customerFields?.userId;
             return (
               <article key={item.lineId} className="rounded-[14px] border border-gold/25 bg-card p-5">
@@ -57,9 +58,16 @@ export function OrderSuccessView() {
                 <p className="mt-2 text-xs text-muted">
                   {t("success.fulfillment")}: {isTopup ? t("status.awaiting") : t("status.ready")}
                 </p>
+                {isGiftSend ? (
+                  <p className="mt-2 text-sm text-muted">
+                    {t("gift.sentTo")} {item.digital?.recipientName} · {item.digital?.recipientEmail}
+                  </p>
+                ) : null}
+                {item.digital?.giftMessage ? <p className="mt-1 text-sm text-muted">“{item.digital.giftMessage}”</p> : null}
                 {player ? <p className="mt-1 text-xs text-muted">{maskAccountValue(player)}</p> : null}
                 {!isTopup ? (
                   <>
+                    <p className="mt-3 text-sm text-muted">{isGiftSend ? t("gift.successSend") : item.digital?.giftIntent === "self" ? t("gift.successSelf") : t("product.demoOnly")}</p>
                     <p className="mt-3 break-all font-mono text-lg tracking-[0.18em] sm:text-2xl sm:tracking-[0.3em]">
                       {revealed[item.lineId] ? DEMO_CODE_REVEALED : DEMO_CODE}
                     </p>
@@ -67,6 +75,13 @@ export function OrderSuccessView() {
                       {t("product.revealDemo")}
                     </Button>
                     {revealed[item.lineId] ? <p className="mt-3 text-sm text-amber">{t("product.demoOnly")}</p> : null}
+                    {product && item.digital?.giftIntent ? (
+                      <ol className="mt-4 list-decimal space-y-1 ps-5 text-xs leading-5 text-muted">
+                        {(locale === "ar" ? product.digitalOptions.howToUseAr : product.digitalOptions.howToUse).map((step) => (
+                          <li key={step}>{step}</li>
+                        ))}
+                      </ol>
+                    ) : null}
                   </>
                 ) : null}
               </article>

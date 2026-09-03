@@ -1,5 +1,9 @@
 import type { DigitalDenomination, DigitalRegion, Product } from "@/types";
 
+export function isGiftCardProduct(product: Product) {
+  return product.digitalOptions.kind === "gift_card" || product.digitalOptions.kind === "wallet";
+}
+
 /** Prefer UAE/MENA for the Jordan storefront when available. */
 export function defaultRegionId(regions: DigitalRegion[]): string {
   const preferred = ["uae", "mena", "jordan", "global"];

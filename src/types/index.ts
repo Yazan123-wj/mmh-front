@@ -153,6 +153,8 @@ export interface NavLink {
   mega?: "shop" | "topups" | "gifts" | "playstation" | "mobile";
 }
 
+export type GiftIntent = "self" | "recipient";
+
 export interface CartDigitalMeta {
   regionId: string;
   regionName: string;
@@ -162,6 +164,10 @@ export interface CartDigitalMeta {
   deliveryContact: string;
   platform: string;
   customerFields?: Record<string, string>;
+  giftIntent?: GiftIntent;
+  recipientName?: string;
+  recipientEmail?: string;
+  giftMessage?: string;
 }
 
 export interface CartItem {

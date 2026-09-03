@@ -19,9 +19,9 @@ import { useUi } from "@/context/ui-context";
 import { useWishlist } from "@/context/wishlist-context";
 import { getRelatedProducts } from "@/data/products";
 import { discountPercent, formatJod } from "@/lib/format";
-import { defaultRegionId, denominationsForRegion, matchDenominationId } from "@/lib/digital-options";
+import { defaultRegionId, denominationsForRegion, isGiftCardProduct, matchDenominationId } from "@/lib/digital-options";
 import { isValidEmail, isValidDemoPhone, validateCustomerField } from "@/lib/validation";
-import type { DeliveryMethod, Product } from "@/types";
+import type { DeliveryMethod, GiftIntent, Product } from "@/types";
 import { Heart } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useMemo, useState } from "react";
@@ -40,6 +40,7 @@ type InfoTab = "how" | "details" | "region" | "delivery" | "refund";
 export function DigitalProductDetail({ product }: { product: Product }) {
   const options = product.digitalOptions;
   const isTopup = product.fulfillmentType === "direct_topup";
+  const isGift = isGiftCardProduct(product);
   const multiRegion = options.regions.length > 1;
   const regionLocked = options.regions.some((item) => item.locked);
   const { t, locale } = useLanguage();
@@ -53,6 +54,10 @@ export function DigitalProductDetail({ product }: { product: Product }) {
   const [denominationId, setDenominationId] = useState(
     () => denominationsForRegion(product, initialRegion).find((item) => item.inStock !== false)?.id ?? "",
   );
+  const [giftIntent, setGiftIntent] = useState<GiftIntent>("self");
+  const [recipientName, setRecipientName] = useState("");
+  const [recipientEmail, setRecipientEmail] = useState("");
+  const [giftMessage, setGiftMessage] = useState("");
   const [method, setMethod] = useState<DeliveryMethod>("account");
   const [showDelivery, setShowDelivery] = useState(false);
   const [contact, setContact] = useState("");
@@ -68,8 +73,13 @@ export function DigitalProductDetail({ product }: { product: Product }) {
   const denomination = options.denominations.find((item) => item.id === denominationId);
   const region = options.regions.find((item) => item.id === regionId);
   const sale = discountPercent(denomination?.priceJod ?? product.priceJod, denomination?.compareAtPriceJod);
-  const needsContact = method === "email" || method === "sms";
-  const contactOk = !needsContact || (method === "email" ? isValidEmail(contact) : isValidDemoPhone(contact));
+  const sendingGift = isGift && giftIntent === "recipient";
+  const deliveryMethod: DeliveryMethod = sendingGift ? "email" : method;
+  const deliveryContact = sendingGift ? recipientEmail.trim() : contact;
+  const needsContact = deliveryMethod === "email" || deliveryMethod === "sms";
+  const contactOk = sendingGift
+    ? isValidEmail(recipientEmail) && recipientName.trim().length >= 2
+    : !needsContact || (deliveryMethod === "email" ? isValidEmail(contact) : isValidDemoPhone(contact));
   const fieldsOk = options.requiredCustomerFields.every((field) =>
     validateCustomerField(field.id, fields[field.id] ?? "", field.required),
   );
@@ -88,9 +98,11 @@ export function DigitalProductDetail({ product }: { product: Product }) {
       ? t("product.needAmount")
       : !fieldsOk
         ? t("product.needAccount")
-        : needsContact && !contactOk
-          ? t("product.needContact")
-          : !confirmed
+        : sendingGift && !contactOk
+          ? t("gift.needRecipient")
+          : needsContact && !contactOk
+            ? t("product.needContact")
+            : !confirmed
             ? t("product.needConfirm")
             : !stockOk
               ? t("product.stockOut")
@@ -108,10 +120,14 @@ export function DigitalProductDetail({ product }: { product: Product }) {
       regionName: locale === "ar" ? region.nameAr : region.name,
       denominationId: denomination.id,
       denominationLabel: locale === "ar" ? denomination.labelAr : denomination.label,
-      deliveryMethod: method,
-      deliveryContact: needsContact ? contact : "",
+      deliveryMethod,
+      deliveryContact: needsContact ? deliveryContact : "",
       platform: platformName,
       customerFields: { ...fields },
+      giftIntent: isGift ? giftIntent : undefined,
+      recipientName: sendingGift ? recipientName.trim() : undefined,
+      recipientEmail: sendingGift ? recipientEmail.trim() : undefined,
+      giftMessage: sendingGift ? giftMessage.trim() : undefined,
     };
   };
 
@@ -148,7 +164,10 @@ export function DigitalProductDetail({ product }: { product: Product }) {
 
         <div className="min-w-0">
           <div className="flex flex-wrap items-center gap-2">
-            <Badge badge={isTopup ? "topup" : "digital"} label={isTopup ? t("common.topup") : t("product.fulfillmentCode")} />
+            <Badge
+              badge={isTopup ? "topup" : isGift ? "digital" : "digital"}
+              label={isTopup ? t("common.topup") : isGift ? t("gift.badge") : t("product.fulfillmentCode")}
+            />
             {regionLocked ? <Badge badge="region_locked" label={t("common.regionLocked")} /> : null}
             {sale ? <Badge badge="sale" label={`-${sale}%`} /> : null}
           </div>
@@ -230,6 +249,57 @@ export function DigitalProductDetail({ product }: { product: Product }) {
             </div>
           </div>
 
+          {isGift ? (
+            <div className="mt-6">
+              <p className="mb-2 text-sm font-medium">{t("gift.who")}</p>
+              <p className="mb-3 text-xs leading-5 text-muted">{t("gift.process")}</p>
+              <div className="grid gap-2 sm:grid-cols-2">
+                {(
+                  [
+                    ["self", t("gift.forMe"), t("gift.forMeHint")],
+                    ["recipient", t("gift.send"), t("gift.sendHint")],
+                  ] as const
+                ).map(([value, label, hint]) => (
+                  <button
+                    key={value}
+                    type="button"
+                    aria-pressed={giftIntent === value}
+                    onClick={() => {
+                      setGiftIntent(value);
+                      if (value === "recipient") setMethod("email");
+                    }}
+                    className={choiceClass(giftIntent === value, "px-3 py-3 text-start")}
+                  >
+                    <span className="block text-sm font-medium">{label}</span>
+                    <span className="mt-1 block text-xs leading-5 text-muted">{hint}</span>
+                  </button>
+                ))}
+              </div>
+              {sendingGift ? (
+                <div className="mt-4 space-y-3">
+                  <Field label={t("gift.recipientName")} value={recipientName} onChange={(event) => setRecipientName(event.target.value)} />
+                  <Field
+                    label={t("gift.recipientEmail")}
+                    type="email"
+                    value={recipientEmail}
+                    onChange={(event) => setRecipientEmail(event.target.value)}
+                    placeholder="name@example.com"
+                  />
+                  <label className="block space-y-1.5">
+                    <span className="text-sm font-medium">{t("gift.message")}</span>
+                    <textarea
+                      value={giftMessage}
+                      onChange={(event) => setGiftMessage(event.target.value)}
+                      placeholder={t("gift.messagePlaceholder")}
+                      rows={3}
+                      className="w-full rounded-[12px] border border-line bg-elevated px-3 py-2 text-sm"
+                    />
+                  </label>
+                </div>
+              ) : null}
+            </div>
+          ) : null}
+
           {options.requiredCustomerFields.map((field) => (
             <div key={field.id} className="mt-6">
               <Field
@@ -255,7 +325,18 @@ export function DigitalProductDetail({ product }: { product: Product }) {
             </div>
           ))}
 
-          {options.deliveryMethods.length > 1 ? (
+          {isGift ? (
+            <div className="mt-6 rounded-[12px] border border-line bg-card/50 p-4">
+              <p className="text-sm font-medium">{t("gift.redeemTitle")}</p>
+              <ol className="mt-2 list-decimal space-y-1 ps-5 text-xs leading-5 text-muted">
+                {(locale === "ar" ? options.howToUseAr : options.howToUse).slice(0, 4).map((step) => (
+                  <li key={step}>{step}</li>
+                ))}
+              </ol>
+            </div>
+          ) : null}
+
+          {!sendingGift && options.deliveryMethods.length > 1 ? (
             <div className="mt-5">
               <button
                 type="button"

@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { defaultRegionId, denominationsForRegion, matchDenominationId, uniqueFaceValues } from "@/lib/digital-options";
+import { defaultRegionId, denominationsForRegion, isGiftCardProduct, matchDenominationId, uniqueFaceValues } from "@/lib/digital-options";
 import { PRODUCTS } from "@/data/products";
 import type { DigitalDenomination, Product } from "@/types";
 
@@ -31,5 +31,14 @@ describe("digital option visibility", () => {
   it("defaults to UAE/MENA when available", () => {
     const psn = PRODUCTS.find((item) => item.id === "psn-store")!;
     expect(defaultRegionId(psn.digitalOptions.regions)).toBe("uae");
+  });
+
+  it("treats wallet and gift-card products as gift cards", () => {
+    const psn = PRODUCTS.find((item) => item.id === "psn-store")!;
+    const xbox = PRODUCTS.find((item) => item.id === "xbox-gift")!;
+    const pubg = PRODUCTS.find((item) => item.id === "pubg-uc")!;
+    expect(isGiftCardProduct(psn)).toBe(true);
+    expect(isGiftCardProduct(xbox)).toBe(true);
+    expect(isGiftCardProduct(pubg)).toBe(false);
   });
 });
