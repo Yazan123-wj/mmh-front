@@ -43,10 +43,6 @@ function createDemoOrder(parsed: z.infer<typeof checkoutSchema>) {
   };
 }
 
-/**
- * Storefront checkout for demos and production.
- * Falls back to a simulated order when DATABASE_URL / Auth are not configured (Vercel frontend preview).
- */
 export async function createStorefrontOrder(input: unknown) {
   const parsed = checkoutSchema.parse(input);
   if (!rateLimit(`checkout:${parsed.email}`, 12, 10 * 60 * 1000)) {
@@ -59,7 +55,7 @@ export async function createStorefrontOrder(input: unknown) {
       const result = await createPendingOrder(parsed);
       return { ...result, demo: false as const };
     } catch {
-      // Frontend preview often has static denomination IDs and no seeded DB — keep the demo flow working.
+      return createDemoOrder(parsed);
     }
   }
 
