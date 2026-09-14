@@ -2,12 +2,14 @@
 
 import { ProductGrid } from "@/components/product/product-card";
 import { SectionHeading } from "@/components/ui/section-heading";
+import { getSnapshotProducts } from "@/lib/catalog-snapshot";
 import { PRODUCTS } from "@/data/products";
 import { useLanguage } from "@/context/language-context";
 
 export function TrendingProducts() {
   const { t } = useLanguage();
-  const products = PRODUCTS.filter((product) => product.trending).slice(0, 8);
+  const catalog = getSnapshotProducts();
+  const products = (catalog.length ? catalog : PRODUCTS).filter((product) => product.trending).slice(0, 8);
   return (
     <section className="container-mmh py-6">
       <SectionHeading

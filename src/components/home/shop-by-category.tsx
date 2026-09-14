@@ -3,15 +3,21 @@
 import { CategoryTileImage } from "@/components/home/category-tile-image";
 import { SectionHeading } from "@/components/ui/section-heading";
 import { CATEGORIES, HOME_CATEGORIES, HOME_CATEGORY_IMAGES } from "@/data/categories";
+import { getSnapshotCategories } from "@/lib/catalog-snapshot";
 import { useLanguage } from "@/context/language-context";
 import Link from "next/link";
 
 export function ShopByCategory() {
   const { t, locale } = useLanguage();
-  const items = HOME_CATEGORIES.map((slug) => ({
+  const databaseCategories = getSnapshotCategories();
+  const catalog = databaseCategories.length ? databaseCategories : CATEGORIES;
+  const preferred = HOME_CATEGORIES.map((slug) => ({
     slug,
-    category: CATEGORIES.find((category) => category.slug === slug)!,
-  }));
+    category: catalog.find((category) => category.slug === slug),
+  })).filter((item): item is { slug: (typeof HOME_CATEGORIES)[number]; category: (typeof catalog)[number] } => Boolean(item.category));
+  const items = preferred.length >= 4
+    ? preferred
+    : catalog.filter((category) => !category.parent).slice(0, 8).map((category) => ({ slug: category.slug, category }));
 
   return (
     <section className="container-mmh py-10 md:py-16">
@@ -24,7 +30,7 @@ export function ShopByCategory() {
             className="group overflow-hidden rounded-[12px] border border-line bg-card transition-colors hover:border-gold/38"
           >
             <CategoryTileImage
-              src={HOME_CATEGORY_IMAGES[slug]}
+              src={HOME_CATEGORY_IMAGES[slug as keyof typeof HOME_CATEGORY_IMAGES]}
               alt={locale === "ar" ? category.nameAr : category.name}
               artworkKey={category.artworkKey}
               className="aspect-[4/3]"

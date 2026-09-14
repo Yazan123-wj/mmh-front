@@ -5,6 +5,7 @@ import { Field } from "@/components/ui/field";
 import { SelectField } from "@/components/ui/select-field";
 import { choiceClass } from "@/components/ui/control";
 import { CATEGORIES } from "@/data/categories";
+import { getSnapshotCategories, getSnapshotProducts } from "@/lib/catalog-snapshot";
 import { uniqueBrands, uniqueKinds, uniquePlatforms, uniqueRegions, priceRange } from "@/data/products";
 import { emptyFilters } from "@/lib/catalog";
 import { useLanguage } from "@/context/language-context";
@@ -23,6 +24,9 @@ const KINDS: ProductKind[] = ["gift_card", "wallet", "game_currency", "subscript
 export function FilterSidebar({ value, onChange, lockedCategory, showReset = true }: FiltersProps) {
   const { t, locale } = useLanguage();
   const range = priceRange();
+  const databaseCategories = getSnapshotCategories();
+  const categories = databaseCategories.length ? databaseCategories : CATEGORIES;
+  const hasReviews = getSnapshotProducts().some((product) => product.reviewCount > 0);
   const set = (patch: Partial<FilterState>) => onChange({ ...value, ...patch });
 
   return (
@@ -40,7 +44,7 @@ export function FilterSidebar({ value, onChange, lockedCategory, showReset = tru
         onChange={(event) => set({ category: event.target.value })}
       >
         <option value="">{t("common.viewAll")}</option>
-        {CATEGORIES.map((category) => (
+        {categories.map((category) => (
           <option key={category.slug} value={category.slug}>
             {locale === "ar" ? category.nameAr : category.name}
           </option>
@@ -123,15 +127,17 @@ export function FilterSidebar({ value, onChange, lockedCategory, showReset = tru
           </option>
         ))}
       </SelectField>
-      <SelectField
-        label={t("filter.rating")}
-        value={value.rating ? String(value.rating) : ""}
-        onChange={(event) => set({ rating: event.target.value ? Number(event.target.value) : undefined })}
-      >
-        <option value="">{t("filter.ratingAll")}</option>
-        <option value="4">4+</option>
-        <option value="4.5">4.5+</option>
-      </SelectField>
+      {hasReviews ? (
+        <SelectField
+          label={t("filter.rating")}
+          value={value.rating ? String(value.rating) : ""}
+          onChange={(event) => set({ rating: event.target.value ? Number(event.target.value) : undefined })}
+        >
+          <option value="">{t("filter.ratingAll")}</option>
+          <option value="4">4+</option>
+          <option value="4.5">4.5+</option>
+        </SelectField>
+      ) : null}
       <label className="flex min-h-11 items-center gap-2.5 text-sm">
         <input
           type="checkbox"

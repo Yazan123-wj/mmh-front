@@ -1,6 +1,8 @@
-import { ShopCatalog } from "@/components/shop/shop-catalog";
+import { CategoryListing } from "@/components/shop/category-listing";
 import { parseFilterParams } from "@/lib/catalog";
 import { pageMeta } from "@/lib/seo";
+import { loadPublishedCategories, mapCategory } from "@/server/catalog/map";
+import { queryPublishedProducts } from "@/server/catalog/query";
 
 export const metadata = pageMeta(
   "Shop digital gaming products in Jordan",
@@ -14,10 +16,25 @@ export default async function ShopPage({
   searchParams: Promise<Record<string, string | string[] | undefined>>;
 }) {
   const params = await searchParams;
+  const filters = parseFilterParams(params);
+  const products = await queryPublishedProducts(filters);
+  const rows = await loadPublishedCategories();
+  const subcategories = rows
+    .filter((item) => !item.parentId)
+    .map((item) => mapCategory(item))
+    .map((item) => ({ href: item.href, label: item.name }));
+
   return (
-    <div className="container-mmh py-6 sm:py-10">
-      <h1 className="mb-6 text-2xl font-semibold sm:mb-8 sm:text-3xl">Shop</h1>
-      <ShopCatalog initial={parseFilterParams(params)} />
-    </div>
+    <CategoryListing
+      title="Shop"
+      breadcrumbs={[
+        { href: "/", label: "MMH" },
+        { label: "Shop" },
+      ]}
+      subcategories={subcategories}
+      initial={filters}
+      source={products}
+      basePath="/shop"
+    />
   );
 }

@@ -1,15 +1,10 @@
-import { ShopCatalog } from "@/components/shop/shop-catalog";
-import { getCategory } from "@/data/categories";
-import { getProductsByCategory } from "@/data/products";
+import { CategoryListing } from "@/components/shop/category-listing";
 import { parseFilterParams } from "@/lib/catalog";
 import { pageMeta } from "@/lib/seo";
 import { notFound } from "next/navigation";
 import type { Metadata } from "next";
-import { CATEGORIES } from "@/data/categories";
-
-export function generateStaticParams() {
-  return CATEGORIES.map((category) => ({ slug: category.slug }));
-}
+import { loadPublishedCategories, mapCategory } from "@/server/catalog/map";
+import { queryPublishedProducts } from "@/server/catalog/query";
 
 export async function generateMetadata({
   params,
@@ -17,7 +12,9 @@ export async function generateMetadata({
   params: Promise<{ slug: string }>;
 }): Promise<Metadata> {
   const { slug } = await params;
-  const category = getCategory(slug);
+  const rows = await loadPublishedCategories();
+  const row = rows.find((item) => item.slug === slug);
+  const category = row ? mapCategory(row) : undefined;
   if (!category) return pageMeta("Category", "MMH category", "/shop");
   return pageMeta(category.name, category.description, `/category/${slug}`);
 }
@@ -30,15 +27,39 @@ export default async function CategoryPage({
   searchParams: Promise<Record<string, string | string[] | undefined>>;
 }) {
   const { slug } = await params;
-  const category = getCategory(slug);
-  if (!category) notFound();
+  const rows = await loadPublishedCategories();
+  const row = rows.find((item) => item.slug === slug);
+  const category = row ? mapCategory(row) : undefined;
+  if (!category || !row) notFound();
+
   const query = await searchParams;
-  const source = getProductsByCategory(slug);
+  const filters = { ...parseFilterParams(query), category: slug };
+  const source = await queryPublishedProducts(filters, slug);
+
+  const children = rows.filter((item) => item.parentId === row.id).map((item) => mapCategory(item, slug));
+  const siblings =
+    row.parentId
+      ? rows
+          .filter((item) => item.parentId === row.parentId && item.id !== row.id)
+          .map((item) => mapCategory(item))
+      : [];
+  const subcategories = (children.length ? children : siblings).map((item) => ({
+    href: item.href,
+    label: item.name,
+  }));
+
   return (
-    <div className="container-mmh py-6 sm:py-10">
-      <h1 className="text-2xl font-semibold sm:text-3xl">{category.name}</h1>
-      <p className="mt-2 mb-8 max-w-2xl text-sm text-muted">{category.description}</p>
-      <ShopCatalog initial={{ ...parseFilterParams(query), category: slug }} source={source} basePath={`/category/${slug}`} />
-    </div>
+    <CategoryListing
+      title={category.name}
+      breadcrumbs={[
+        { href: "/", label: "MMH" },
+        { href: "/shop", label: "Shop" },
+        { label: category.name },
+      ]}
+      subcategories={subcategories}
+      initial={filters}
+      source={source}
+      basePath={`/category/${slug}`}
+    />
   );
 }

@@ -14,9 +14,9 @@ export const FAQ_ITEMS: FaqItem[] = [
     question: "How fast are digital cards delivered?",
     questionAr: "ما سرعة تسليم البطاقات الرقمية؟",
     answer:
-      "Eligible cards are marked Instant Delivery. After Phase 2 payment succeeds, codes will be sent to the email, SMS, or My Orders destination you confirm at checkout. This frontend shows a simulated, fictional code only.",
+      "No live delivery promise is currently offered. Checkout creates a pending order; code delivery remains locked until a payment method and fulfillment provider are connected and verified.",
     answerAr:
-      "البطاقات المؤهلة تحمل شارة التسليم الفوري. بعد نجاح الدفع في المرحلة الثانية يُرسل الكود إلى البريد أو الرسائل أو طلباتي. هذه الواجهة تعرض كوداً تجريبياً وهمياً فقط.",
+      "لا يوجد حالياً وعد بتسليم حي. ينشئ إتمام الطلب سجلاً معلّقاً، ويبقى تسليم الكود مقفلاً حتى ربط وسيلة دفع ومزوّد تنفيذ والتحقق منهما.",
   },
   {
     id: "region",
@@ -34,9 +34,9 @@ export const FAQ_ITEMS: FaqItem[] = [
     question: "Can I refund a digital code?",
     questionAr: "هل يمكن استرجاع كود رقمي؟",
     answer:
-      "Generally no, once a code is revealed or a top-up is submitted. Confirm region, platform, denomination, and account details before you pay. This is placeholder policy text pending legal review.",
+      "Generally no once a code is revealed or a top-up is submitted. Confirm region, platform, denomination, and account details before ordering. The final policy remains subject to legal review.",
     answerAr:
-      "عادة لا، بعد كشف الكود أو إرسال الشحن. أكّد المنطقة والمنصة والفئة وتفاصيل الحساب قبل الدفع. هذا نص تجريبي بانتظار المراجعة القانونية.",
+      "عادة لا بعد كشف الكود أو إرسال الشحن. أكّد المنطقة والمنصة والفئة وتفاصيل الحساب قبل الطلب. تبقى السياسة النهائية خاضعة للمراجعة القانونية.",
   },
   {
     id: "digital-account",
@@ -74,9 +74,9 @@ export const FAQ_ITEMS: FaqItem[] = [
     question: "Do you support customers in Jordan?",
     questionAr: "هل الدعم متاح في الأردن؟",
     answer:
-      "Yes. MMH provides local customer support in Jordan for digital-code and top-up orders. Contact details on this site are placeholders until launch.",
+      "MMH is based in Jordan. Official support contact details have not yet been published on this storefront.",
     answerAr:
-      "نعم. إم إم إتش يقدم دعماً محلياً في الأردن لطلبات الأكواد والشحن. بيانات التواصل هنا تجريبية حتى الإطلاق.",
+      "إم إم إتش في الأردن. لم تُنشر بعد بيانات التواصل الرسمية للدعم على هذا المتجر.",
   },
 ];
 

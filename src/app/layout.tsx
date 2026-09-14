@@ -1,24 +1,7 @@
 import { SITE } from "@/config/site";
 import type { Metadata, Viewport } from "next";
-import { Alexandria, Geist, Geist_Mono } from "next/font/google";
 import Script from "next/script";
 import "./globals.css";
-
-const geistSans = Geist({
-  variable: "--font-geist-sans",
-  subsets: ["latin"],
-});
-
-const geistMono = Geist_Mono({
-  variable: "--font-geist-mono",
-  subsets: ["latin"],
-});
-
-const alexandria = Alexandria({
-  variable: "--font-arabic",
-  subsets: ["arabic", "latin"],
-  weight: ["300", "400", "500", "600", "700"],
-});
 
 export const viewport: Viewport = {
   width: "device-width",
@@ -50,7 +33,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
       dir="ltr"
       data-input="pointer"
       suppressHydrationWarning
-      className={`${geistSans.variable} ${geistMono.variable} ${alexandria.variable} h-full antialiased`}
+      className="h-full antialiased"
     >
       <body className="min-h-full">
         <Script id="mmh-boot" strategy="beforeInteractive">

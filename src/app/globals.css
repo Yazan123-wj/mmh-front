@@ -12,12 +12,12 @@
   --mmh-yellow-400: #ffcd52;
   --mmh-yellow-600: #dfa91e;
 
-  --background: var(--mmh-navy-950);
-  --foreground: #f5f5fa;
+  --background: #17182b;
+  --foreground: #f4f5fb;
 
-  --surface-primary: var(--mmh-navy-900);
-  --surface-secondary: var(--mmh-navy-850);
-  --surface-elevated: var(--mmh-navy-800);
+  --surface-primary: #22233d;
+  --surface-secondary: #262743;
+  --surface-elevated: #2b2c4a;
 
   --primary: var(--mmh-yellow-500);
   --primary-hover: var(--mmh-yellow-400);
@@ -27,15 +27,15 @@
   --secondary: var(--mmh-purple-600);
   --secondary-hover: var(--mmh-purple-500);
   --secondary-active: var(--mmh-purple-700);
-  --secondary-foreground: #f8f8fc;
+  --secondary-foreground: #ffffff;
 
-  --muted: var(--mmh-purple-700);
+  --muted: #9ea1c0;
   --muted-foreground: #b8bad2;
-  --subtle-foreground: #8d90ad;
+  --subtle-foreground: #8a8ca8;
 
-  --border: rgba(184, 186, 210, 0.14);
-  --border-strong: rgba(184, 186, 210, 0.24);
-  --overlay: rgba(16, 17, 31, 0.76);
+  --border: rgba(184, 186, 210, 0.16);
+  --border-strong: rgba(184, 186, 210, 0.28);
+  --overlay: rgba(10, 11, 22, 0.72);
 
   --success: #22c55e;
   --warning: var(--mmh-yellow-500);
@@ -57,10 +57,10 @@
   --radius-sm: 8px;
   --radius-lg: 14px;
   --max-width: 1440px;
-  --header-height: 72px;
+  --header-height: 64px;
   --announce-height: 36px;
-  --glow-purple: rgba(86, 88, 149, 0.2);
-  --glow-yellow: rgba(247, 192, 55, 0.12);
+  --glow-purple: rgba(104, 106, 176, 0.28);
+  --glow-yellow: rgba(247, 192, 55, 0.18);
   --z-header: 40;
   --z-dropdown: 45;
   --z-sticky: 30;
@@ -68,6 +68,9 @@
   --z-overlay: 70;
   --z-modal: 80;
   --z-toast: 90;
+  --font-mmh-sans: ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+  --font-mmh-arabic: Tahoma, Arial, sans-serif;
+  --font-mmh-mono: ui-monospace, "SFMono-Regular", Menlo, Consolas, monospace;
 }
 
 @theme inline {
@@ -89,9 +92,9 @@
   --color-success: var(--success);
   --color-danger: var(--destructive);
   --color-overlay: var(--overlay);
-  --font-sans: var(--font-geist-sans);
-  --font-arabic: var(--font-arabic);
-  --font-mono: var(--font-geist-mono);
+  --font-sans: var(--font-mmh-sans);
+  --font-arabic: var(--font-mmh-arabic);
+  --font-mono: var(--font-mmh-mono);
   --radius-sm: 8px;
   --radius-md: 12px;
   --radius-lg: 14px;
@@ -123,13 +126,13 @@ video {
 }
 
 html[dir="rtl"] body {
-  font-family: var(--font-arabic), var(--font-geist-sans), sans-serif;
+  font-family: var(--font-mmh-arabic);
 }
 
 body {
   background: var(--bg-deep);
   color: var(--text-primary);
-  font-family: var(--font-geist-sans), system-ui, sans-serif;
+  font-family: var(--font-mmh-sans);
   min-height: 100%;
   overflow-x: hidden;
 }
@@ -318,7 +321,7 @@ input:-webkit-autofill:focus {
   background: var(--clicks-bg);
   color: var(--clicks-text);
   min-height: 100%;
-  font-family: var(--font-geist-sans), system-ui, sans-serif;
+  font-family: var(--font-mmh-sans);
 }
 
 .clicks-shell :focus-visible {

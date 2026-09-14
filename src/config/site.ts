@@ -1,8 +1,8 @@
 export const SITE = {
   name: "MMH",
   legalName: "MMH",
-  tagline: "Your games. Your credit. Instantly.",
-  taglineAr: "ألعابك. رصيدك. فوراً.",
+  tagline: "Your games. Your credit. One place.",
+  taglineAr: "ألعابك. رصيدك. في مكان واحد.",
   description:
     "MMH is a Jordanian store for digital gaming codes, gift cards, wallet credit, subscriptions, and selected direct account top-ups.",
   descriptionAr:
@@ -12,13 +12,13 @@ export const SITE = {
   currencyLabel: "JOD",
   localeDefault: "en" as const,
   contact: {
-    phone: "+962 7X XXX XXXX",
-    phoneNote: "Placeholder — replace with the official MMH number.",
-    email: "hello@example.com",
-    emailNote: "Placeholder — replace with the official MMH inbox.",
-    address: "[Amman store address — update before launch]",
+    phone: "",
+    phoneNote: "",
+    email: "",
+    emailNote: "",
+    address: "",
     city: "Amman, Jordan",
-    hours: "[Store hours — update before launch]",
+    hours: "",
     instagram: "#",
     facebook: "#",
     tiktok: "#",
@@ -29,10 +29,5 @@ export const SITE = {
     estimateAr: "يُصدر بعد تأكيد الدفع. تسليم الأرقام الحية غير مفعّل في هذه البيئة.",
     topupEstimate: "Submitted for processing after checkout",
     topupEstimateAr: "يُرسل للمعالجة بعد إتمام الطلب",
-  },
-  campaignEndsAt: "2026-09-15T21:00:00+03:00",
-  promoCodes: {
-    MMH10: { type: "percent" as const, value: 10 },
-    GAME20: { type: "flat" as const, value: 20 },
   },
 } as const;

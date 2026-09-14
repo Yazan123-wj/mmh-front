@@ -15,12 +15,14 @@ export interface StoreBanner {
   subtitleAr: string;
   cta: string;
   ctaAr: string;
+  desktopImage?: string;
+  mobileImage?: string;
 }
 
 export function PromoBanners({ items }: { items?: StoreBanner[] }) {
   const { t, locale } = useLanguage();
   const banners =
-    items && items.length > 0
+    items
       ? items.slice(0, 2)
       : PROMOTIONAL_BANNERS.slice(0, 2).map((banner) => ({
           id: banner.id,

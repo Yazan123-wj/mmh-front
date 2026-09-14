@@ -139,8 +139,8 @@ export function CartPageView() {
         <Button
           variant="secondary"
           className="mt-2 w-full"
-          onClick={() => {
-            const ok = applyPromo(code);
+          onClick={async () => {
+            const ok = await applyPromo(code);
             push({ title: ok ? t("cart.promoOk") : t("cart.promoBad"), tone: ok ? "success" : "error" });
           }}
         >

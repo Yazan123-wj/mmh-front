@@ -1,19 +1,14 @@
 import { DigitalProductDetail } from "@/components/product/digital-detail";
-import { RecentlyViewed } from "@/components/product/recently-viewed";
-import { PRODUCTS } from "@/data/products";
-import { hydrateCatalogFromDb } from "@/server/catalog/map";
+import { loadPublishedCatalog, mapProduct } from "@/server/catalog/map";
 import { pageMeta } from "@/lib/seo";
 import { notFound } from "next/navigation";
 import type { Metadata } from "next";
 import Script from "next/script";
 
-export function generateStaticParams() {
-  return PRODUCTS.map((product) => ({ slug: product.slug }));
-}
-
 async function resolveProduct(slug: string) {
-  const { products } = await hydrateCatalogFromDb();
-  return products.find((item) => item.slug === slug) ?? PRODUCTS.find((item) => item.slug === slug);
+  const products = await loadPublishedCatalog();
+  const row = products.find((item) => item.slug === slug);
+  return row ? mapProduct(row) : undefined;
 }
 
 export async function generateMetadata({
@@ -54,7 +49,6 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
     <>
       <Script id="product-jsonld" type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />
       <DigitalProductDetail product={product} />
-      <RecentlyViewed excludeId={product.id} />
     </>
   );
 }

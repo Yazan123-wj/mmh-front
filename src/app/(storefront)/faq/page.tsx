@@ -1,20 +1,30 @@
 import { FAQ_ITEMS } from "@/data/faq";
+import { FaqAccordion } from "@/components/ui/faq-accordion";
 import { pageMeta } from "@/lib/seo";
+import { loadPublishedFaqs } from "@/server/catalog/map";
 
 export const metadata = pageMeta("FAQ", "Digital codes, regions, top-ups, and MMH store questions.", "/faq");
 
-export default function FaqPage() {
+export default async function FaqPage() {
+  const rows = await loadPublishedFaqs().catch(() => []);
+  const faqs = rows.length
+    ? rows.map((row) => {
+        const en = row.translations.find((item) => item.locale === "en");
+        const ar = row.translations.find((item) => item.locale === "ar");
+        return {
+          id: row.id,
+          group: "store" as const,
+          question: en?.question ?? "",
+          questionAr: ar?.question ?? en?.question ?? "",
+          answer: en?.answer ?? "",
+          answerAr: ar?.answer ?? en?.answer ?? "",
+        };
+      })
+    : FAQ_ITEMS;
   return (
     <div className="container-mmh max-w-3xl py-10 md:py-14">
       <h1 className="text-2xl font-semibold sm:text-3xl">Frequently asked questions</h1>
-      <div className="mt-8 space-y-3">
-        {FAQ_ITEMS.map((item) => (
-          <details key={item.id} className="rounded-[12px] border border-line bg-card p-4">
-            <summary className="cursor-pointer font-medium">{item.question}</summary>
-            <p className="mt-2 text-sm leading-6 text-muted">{item.answer}</p>
-          </details>
-        ))}
-      </div>
+      <div className="mt-8"><FaqAccordion items={faqs} /></div>
     </div>
   );
 }

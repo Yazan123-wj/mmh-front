@@ -25,9 +25,8 @@ export function Footer() {
             {t("home.heroSubtitle")}
           </p>
           <p className="mt-5 text-sm text-muted">{SITE.contact.city}</p>
-          <p className="text-sm text-muted">{SITE.contact.address}</p>
-          <p className="text-sm text-muted">{SITE.contact.phone}</p>
-          <p className="text-xs text-muted/80">{SITE.contact.phoneNote}</p>
+          {SITE.contact.address ? <p className="text-sm text-muted">{SITE.contact.address}</p> : null}
+          {SITE.contact.phone ? <p className="text-sm text-muted">{SITE.contact.phone}</p> : null}
           <form
             className="mt-6 flex max-w-md flex-col gap-2 sm:flex-row"
             onSubmit={(event) => {
@@ -37,7 +36,7 @@ export function Footer() {
                 return;
               }
               setDone(true);
-              push({ title: t("home.newsletterSuccess"), tone: "success" });
+              push({ title: t("home.newsletterSuccess"), tone: "info" });
             }}
           >
             <input

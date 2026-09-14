@@ -14,7 +14,7 @@ export function Logo({ className, size = 40 }: { className?: string; size?: numb
         style={{ width: size, height: size }}
         priority
       />
-      <span className="hidden text-[15px] font-semibold tracking-[0.16em] text-fg min-[380px]:inline sm:text-[17px] sm:tracking-[0.18em]">
+      <span className="truncate text-[15px] font-semibold tracking-[0.14em] text-fg sm:text-[17px] sm:tracking-[0.18em]">
         MMH DC
       </span>
     </Link>

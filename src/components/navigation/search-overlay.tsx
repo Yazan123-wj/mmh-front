@@ -13,6 +13,7 @@ import { useEscape, useScrollLock } from "@/hooks/use-overlay";
 import { STORAGE_KEYS } from "@/lib/storage";
 import { useLocalStorage } from "@/hooks/use-local-storage";
 import { cn } from "@/lib/cn";
+import { getSnapshotCategories } from "@/lib/catalog-snapshot";
 import { ArrowRight, Clock, Search, TrendingUp, X } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -66,13 +67,15 @@ export function SearchOverlay() {
 
   const products = useMemo(() => searchProducts(debounced).slice(0, 6), [debounced]);
   const categories = useMemo(() => {
+    const databaseCategories = getSnapshotCategories();
+    const catalog = databaseCategories.length ? databaseCategories : CATEGORIES;
     if (!debounced) {
-      return HOME_CATEGORIES.map((slug) => CATEGORIES.find((category) => category.slug === slug)).filter(
-        (category): category is (typeof CATEGORIES)[number] => Boolean(category),
+      return HOME_CATEGORIES.map((slug) => catalog.find((category) => category.slug === slug)).filter(
+        (category): category is (typeof catalog)[number] => Boolean(category),
       );
     }
     const q = debounced.toLowerCase();
-    return CATEGORIES.filter(
+    return catalog.filter(
       (category) => category.name.toLowerCase().includes(q) || category.nameAr.includes(debounced),
     ).slice(0, 4);
   }, [debounced]);

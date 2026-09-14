@@ -25,7 +25,7 @@ const empty: CheckoutDraft = {
 };
 
 export function CheckoutView() {
-  const { items, subtotal, discount, clear, hydrated } = useCart();
+  const { items, subtotal, discount, promoCode, clear, hydrated } = useCart();
   const { t, locale } = useLanguage();
   const router = useRouter();
   const [step, setStep] = useState(1);
@@ -126,26 +126,19 @@ export function CheckoutView() {
         {step === 3 ? (
           <div className="mt-8 space-y-3">
             <p className="text-sm text-muted">{t("checkout.payNote")}</p>
-            {([
-              ["placeholder", t("checkout.payCard")],
-              ["cliq", t("checkout.payCliq")],
-            ] as const).map(([method, label]) => (
-              <button
-                key={method}
-                type="button"
-                onClick={() => patch({ payment: { method } })}
-                className={choiceClass(draft.payment.method === method, "flex h-12 w-full items-center px-4")}
-              >
-                {label}
-              </button>
-            ))}
+            <div
+              role="status"
+              className={choiceClass(true, "flex min-h-12 w-full items-center px-4 text-start")}
+            >
+              {t("checkout.payCard")}
+            </div>
           </div>
         ) : null}
 
         {step === 4 ? (
           <div className="mt-8 space-y-3 text-sm">
             <p className="break-words"><strong>{draft.customer.fullName}</strong> · {draft.customer.email} · {draft.customer.phone}</p>
-            <p>{t("checkout.payNote")}</p>
+            <p className="rounded-xl border border-line bg-card p-3 text-muted">{t("checkout.payNote")}</p>
             <label className="flex items-start gap-2">
               <input type="checkbox" checked={draft.regionConfirmed} onChange={(event) => patch({ regionConfirmed: event.target.checked })} />
               {t("checkout.confirmAll")}
@@ -181,6 +174,7 @@ export function CheckoutView() {
                   phone: draft.customer.phone,
                   notes: draft.notes,
                   idempotencyKey: items.map((item) => item.lineId).join(":") + draft.customer.email,
+                  couponCode: promoCode || undefined,
                   items: items.map((item) => ({
                     productId: item.productId,
                     variantId: item.digital?.denominationId || getProductById(item.productId)?.digitalOptions.denominations[0]?.id || item.productId,
@@ -188,18 +182,18 @@ export function CheckoutView() {
                     fields: item.digital?.customerFields,
                   })),
                 };
-                const finish = (orderId: string) => {
+                const finish = (orderId: string, orderNumber: string) => {
                   writeJson(STORAGE_KEYS.checkout, { draft, items, total, createdAt: new Date().toISOString(), orderId });
                   clear();
-                  router.push("/order-success");
+                  router.push(`/order-success?ref=${encodeURIComponent(orderId)}&number=${encodeURIComponent(orderNumber)}`);
                 };
-                const demoOrderId = `MMH-${Math.random().toString(36).slice(2, 10).toUpperCase()}`;
                 try {
                   const { createStorefrontOrder } = await import("@/server/actions/checkout");
                   const result = await createStorefrontOrder(payload);
-                  finish(result.orderNumber);
+                  finish(result.id, result.orderNumber);
                 } catch {
-                  finish(demoOrderId);
+                  setPlaceError(locale === "ar" ? "تعذر إنشاء الطلب. لم يتم خصم أي مبلغ. راجع بياناتك وحاول مرة أخرى." : "We could not create the order. Nothing was charged. Review your details and try again.");
+                  setPlacing(false);
                 }
               }}
             >

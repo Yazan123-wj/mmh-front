@@ -361,15 +361,34 @@ async function main() {
     create: { supplierId: supplier.id, externalProductId: "1epin-unmapped-99", mapped: false },
   });
 
+  const customerPassword = "DemoCustomer1!";
+  const customerPasswordHash = await hashPassword(customerPassword);
   const customer = await prisma.user.upsert({
+    where: { email: "demo@mmh.local" },
+    update: { passwordHash: customerPasswordHash, kind: "CUSTOMER", disabled: false, name: "Demo Customer" },
+    create: {
+      email: "demo@mmh.local",
+      name: "Demo Customer",
+      kind: "CUSTOMER",
+      passwordHash: customerPasswordHash,
+    },
+  });
+  await prisma.customerProfile.upsert({
+    where: { userId: customer.id },
+    update: { phone: "+962791234567" },
+    create: { userId: customer.id, phone: "+962791234567" },
+  });
+
+  // Keep legacy sample customer for seeded order history (no storefront password).
+  const sampleCustomer = await prisma.user.upsert({
     where: { email: "yazan@example.com" },
     update: {},
     create: { email: "yazan@example.com", name: "Yazan Amman", kind: "CUSTOMER" },
   });
   await prisma.customerProfile.upsert({
-    where: { userId: customer.id },
+    where: { userId: sampleCustomer.id },
     update: { phone: "+962 7X XXX XXXX" },
-    create: { userId: customer.id, phone: "+962 7X XXX XXXX" },
+    create: { userId: sampleCustomer.id, phone: "+962 7X XXX XXXX" },
   });
 
   const psnVariant = await prisma.productVariant.findFirst({ where: { productId: "psn-store" } });
@@ -378,10 +397,10 @@ async function main() {
   if (psnVariant && pubgVariant && robloxVariant) {
     await seedOrder({
       number: "MMH-A7K2Q9",
-      email: customer.email,
+      email: sampleCustomer.email,
       fullName: "Yazan Amman",
       phone: "+962 7X XXX XXXX",
-      userId: customer.id,
+      userId: sampleCustomer.id,
       paymentStatus: "PAID",
       fulfillmentStatus: "COMPLETED",
       supplierStatus: "COMPLETED",
@@ -392,10 +411,10 @@ async function main() {
     });
     await seedOrder({
       number: "MMH-B3N8W1",
-      email: customer.email,
+      email: sampleCustomer.email,
       fullName: "Yazan Amman",
       phone: "+962 7X XXX XXXX",
-      userId: customer.id,
+      userId: sampleCustomer.id,
       paymentStatus: "PAID",
       fulfillmentStatus: "PROCESSING",
       supplierStatus: "PROCESSING",
@@ -406,10 +425,10 @@ async function main() {
     });
     await seedOrder({
       number: "MMH-C9F4T2",
-      email: customer.email,
+      email: sampleCustomer.email,
       fullName: "Yazan Amman",
       phone: "+962 7X XXX XXXX",
-      userId: customer.id,
+      userId: sampleCustomer.id,
       paymentStatus: "FAILED",
       fulfillmentStatus: "FAILED",
       supplierStatus: "FAILED",

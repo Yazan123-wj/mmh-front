@@ -1,137 +1,220 @@
 "use client";
 
-import { Logo } from "@/components/ui/logo";
 import { LanguageSwitcher } from "@/components/navigation/language-switcher";
 import { ICON_HIT } from "@/components/ui/control";
-import { CATEGORIES } from "@/data/categories";
-import { NAV_LINKS } from "@/data/navigation";
+import { SITE } from "@/config/site";
 import { useCart } from "@/context/cart-context";
 import { useLanguage } from "@/context/language-context";
 import { useUi } from "@/context/ui-context";
-import { useScrollLock, useEscape } from "@/hooks/use-overlay";
-import { ChevronDown, Heart, Search, ShoppingBag, User, X } from "lucide-react";
+import { CATEGORIES } from "@/data/categories";
+import { useEscape, useScrollLock } from "@/hooks/use-overlay";
+import { getSnapshotCategories } from "@/lib/catalog-snapshot";
+import { cn } from "@/lib/cn";
+import type { Category } from "@/types";
+import { ChevronLeft, ChevronRight, Search, X } from "lucide-react";
 import Link from "next/link";
-import { useEffect, useRef, useState } from "react";
+import { usePathname } from "next/navigation";
+import { useEffect, useMemo, useRef, useState } from "react";
 
-const EXPAND: Record<string, string[]> = {
-  "/shop": ["game-top-ups", "gift-cards", "playstation", "steam", "subscriptions", "deals"],
-  "/game-top-ups": ["pubg-mobile", "free-fire", "mobile-legends", "roblox", "valorant", "fortnite", "ea-sports-fc"],
-  "/gift-cards": ["playstation", "steam", "xbox", "nintendo", "apple", "google-play", "razer-gold"],
-  "/category/playstation": ["playstation", "subscriptions"],
-  "/category/mobile-games": ["pubg-mobile", "free-fire", "mobile-legends", "roblox"],
-};
+function buildMenuCategories(): Category[] {
+  const snapshot = getSnapshotCategories();
+  // Prefer the curated tree (parents + children) so chevrons always work.
+  // Append any extra published root categories from the DB snapshot.
+  const bySlug = new Map(CATEGORIES.map((category) => [category.slug, category]));
+  for (const category of snapshot) {
+    if (!bySlug.has(category.slug)) bySlug.set(category.slug, category);
+  }
+  return Array.from(bySlug.values());
+}
 
 export function MobileMenu() {
   const { mobileNavOpen, setMobileNavOpen, setSearchOpen, setCartOpen } = useUi();
   const { t, locale } = useLanguage();
-  const { itemCount, hydrated } = useCart();
-  const [openGroup, setOpenGroup] = useState<string | null>(null);
+  const { itemCount, subtotal, hydrated } = useCart();
+  const pathname = usePathname();
+  const [stack, setStack] = useState<string[]>([]);
+  const dialogRef = useRef<HTMLElement>(null);
   const closeRef = useRef<HTMLButtonElement>(null);
+  const categories = useMemo(() => buildMenuCategories(), [mobileNavOpen]);
+  const currentParent = stack.at(-1);
+  const currentCategory = categories.find((category) => category.slug === currentParent);
+  const visibleCategories = useMemo(
+    () => categories.filter((category) => (currentParent ? category.parent === currentParent : !category.parent)),
+    [categories, currentParent],
+  );
 
   useScrollLock(mobileNavOpen);
   useEscape(mobileNavOpen, () => setMobileNavOpen(false));
 
   useEffect(() => {
-    if (mobileNavOpen) closeRef.current?.focus();
+    if (!mobileNavOpen) {
+      setStack([]);
+      return;
+    }
+    closeRef.current?.focus();
+    const dialog = dialogRef.current;
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (event.key !== "Tab" || !dialog) return;
+      const focusable = Array.from(
+        dialog.querySelectorAll<HTMLElement>(
+          'a[href], button:not([disabled]), input:not([disabled]), [tabindex]:not([tabindex="-1"])',
+        ),
+      );
+      const first = focusable[0];
+      const last = focusable.at(-1);
+      if (event.shiftKey && document.activeElement === first) {
+        event.preventDefault();
+        last?.focus();
+      } else if (!event.shiftKey && document.activeElement === last) {
+        event.preventDefault();
+        first?.focus();
+      }
+    };
+    window.addEventListener("keydown", onKeyDown);
+    return () => window.removeEventListener("keydown", onKeyDown);
   }, [mobileNavOpen]);
 
   if (!mobileNavOpen) return null;
 
-  const go = () => {
+  const close = () => {
     setMobileNavOpen(false);
-    setOpenGroup(null);
+    setStack([]);
   };
+  const active = (href: string) => pathname === href || (href !== "/" && pathname.startsWith(`${href}/`));
+  const labelOf = (category: Category) => (locale === "ar" ? category.nameAr : category.name);
 
   return (
-    <div className="fixed inset-0 z-[60] lg:hidden">
-      <button type="button" className="absolute inset-0 bg-overlay" aria-label={t("nav.close")} onClick={go} />
+    <div className="fixed inset-0 z-[60]">
+      <button type="button" className="absolute inset-0 bg-overlay/80 backdrop-blur-[2px]" aria-label={t("nav.close")} onClick={close} />
       <aside
+        ref={dialogRef}
         role="dialog"
         aria-modal="true"
         aria-label={t("nav.menu")}
-        className="absolute inset-y-0 start-0 flex h-full w-full max-w-[360px] flex-col bg-card pt-[env(safe-area-inset-top)] shadow-2xl"
+        className="absolute inset-y-0 start-0 flex h-full w-[min(88vw,360px)] flex-col bg-deep pt-[env(safe-area-inset-top)] shadow-2xl"
       >
-        <div className="flex h-16 items-center justify-between border-b border-line px-4 lg:h-[72px]">
-          <Logo />
-          <button ref={closeRef} type="button" className={ICON_HIT} onClick={go} aria-label={t("nav.close")}>
+        <div className="flex h-14 items-center justify-between border-b border-white/10 px-4">
+          {currentParent ? (
+            <button
+              type="button"
+              className={cn(ICON_HIT, "h-10 w-10 text-white hover:bg-white/10")}
+              onClick={() => setStack((current) => current.slice(0, -1))}
+              aria-label={t("common.back")}
+            >
+              <ChevronLeft className="h-5 w-5 rtl:rotate-180" />
+            </button>
+          ) : (
+            <p className="text-sm font-semibold text-white">{t("nav.mainMenu")}</p>
+          )}
+          {currentCategory ? (
+            <p className="min-w-0 flex-1 truncate px-3 text-center text-sm font-semibold text-white">
+              {labelOf(currentCategory)}
+            </p>
+          ) : null}
+          <button
+            ref={closeRef}
+            type="button"
+            className={cn(ICON_HIT, "h-10 w-10 text-white hover:bg-white/10")}
+            onClick={close}
+            aria-label={t("nav.close")}
+          >
             <X className="h-5 w-5" />
           </button>
         </div>
-        <nav className="flex-1 overflow-y-auto px-3 py-4">
+
+        <nav className="flex-1 overflow-y-auto" aria-label={t("nav.menu")}>
           <button
             type="button"
-            className="mb-3 flex h-12 w-full items-center gap-2 rounded-[12px] border border-line px-3 text-sm text-muted"
+            className="flex h-12 w-full items-center gap-3 border-b border-white/10 px-4 text-start text-sm text-white/65 transition hover:bg-white/5 hover:text-white"
             onClick={() => {
-              go();
+              close();
               setSearchOpen(true);
             }}
           >
             <Search className="h-4 w-4" />
             {t("common.searchPlaceholder")}
           </button>
-          {NAV_LINKS.map((link) => {
-            const children = EXPAND[link.href];
-            return (
-              <div key={link.href} className="border-b border-line/70">
-                <div className="flex items-center">
-                  <Link href={link.href} className="flex h-12 min-h-12 flex-1 items-center px-2 text-sm font-medium text-muted hover:text-gold" onClick={go}>
-                    {t(link.labelKey)}
-                  </Link>
-                  {children ? (
+
+          {currentParent ? (
+            <Link
+              href={currentCategory?.href ?? "/shop"}
+              onClick={close}
+              className="flex min-h-12 items-center justify-between border-b border-white/10 px-4 text-sm font-semibold text-gold"
+            >
+              <span>{locale === "ar" ? "عرض الكل" : "View all"}</span>
+              <ChevronRight className="h-4 w-4 rtl:rotate-180" />
+            </Link>
+          ) : (
+            <Link
+              href="/"
+              onClick={close}
+              className={cn(
+                "flex min-h-12 items-center border-b border-white/10 px-4 text-sm font-medium text-white",
+                active("/") && "bg-white/8 text-gold",
+              )}
+            >
+              {locale === "ar" ? "الرئيسية" : "Home"}
+            </Link>
+          )}
+
+          <ul>
+            {visibleCategories.map((category) => {
+              const children = categories.filter((item) => item.parent === category.slug);
+              const hasChildren = children.length > 0;
+              const name = labelOf(category);
+
+              if (hasChildren) {
+                return (
+                  <li key={category.slug} className="border-b border-white/10">
                     <button
                       type="button"
-                      className={ICON_HIT}
-                      onClick={() => setOpenGroup(openGroup === link.href ? null : link.href)}
-                      aria-expanded={openGroup === link.href}
-                      aria-label={t(link.labelKey)}
+                      className="flex min-h-12 w-full items-center justify-between gap-3 px-4 text-start text-sm font-medium text-white transition hover:bg-white/5"
+                      onClick={() => setStack((current) => [...current, category.slug])}
                     >
-                      <ChevronDown className={`h-4 w-4 transition ${openGroup === link.href ? "rotate-180" : ""}`} />
+                      <span className="min-w-0 truncate">{name}</span>
+                      <ChevronRight className="h-4 w-4 shrink-0 text-white/80 rtl:rotate-180" aria-hidden />
                     </button>
-                  ) : null}
-                </div>
-                {children && openGroup === link.href ? (
-                  <div className="pb-3 ps-3">
-                    {CATEGORIES.filter((category) => children.includes(category.slug)).map((category) => (
-                      <Link
-                        key={category.slug}
-                        href={category.href}
-                        className="flex h-11 min-h-11 items-center text-sm text-muted hover:text-gold"
-                        onClick={go}
-                      >
-                        {locale === "ar" ? category.nameAr : category.name}
-                      </Link>
-                    ))}
-                  </div>
-                ) : null}
-              </div>
-            );
-          })}
-          <Link href="/brands" className="flex h-12 items-center px-2 text-sm" onClick={go}>
-            {t("nav.brands")}
-          </Link>
-          <Link href="/account" className="flex h-12 items-center gap-2 px-2 text-sm" onClick={go}>
-            <User className="h-4 w-4" />
-            {t("nav.account")}
-          </Link>
-          <Link href="/wishlist" className="flex h-12 items-center gap-2 px-2 text-sm" onClick={go}>
-            <Heart className="h-4 w-4" />
-            {t("nav.wishlist")}
-          </Link>
+                  </li>
+                );
+              }
+
+              return (
+                <li key={category.slug} className="border-b border-white/10">
+                  <Link
+                    href={category.href}
+                    onClick={close}
+                    className={cn(
+                      "flex min-h-12 items-center px-4 text-sm font-medium text-white transition hover:bg-white/5",
+                      active(category.href) && "bg-white/8 text-gold",
+                    )}
+                  >
+                    {name}
+                  </Link>
+                </li>
+              );
+            })}
+          </ul>
+        </nav>
+
+        <div className="border-t border-white/10 p-4 pb-[max(1rem,env(safe-area-inset-bottom))]">
+          <div className="mb-3 flex items-center justify-between gap-3">
+            <LanguageSwitcher />
+            <span className="rounded-lg bg-white/8 px-3 py-2 text-xs font-semibold text-white/70">{SITE.currency}</span>
+          </div>
           <button
             type="button"
-            className="flex h-12 w-full items-center gap-2 px-2 text-start text-sm"
+            className="flex min-h-12 w-full items-center justify-between rounded-xl bg-brand px-4 text-sm font-semibold text-white"
             onClick={() => {
-              go();
+              close();
               setCartOpen(true);
             }}
           >
-            <ShoppingBag className="h-4 w-4" />
-            {t("nav.cart")}
-            {hydrated && itemCount > 0 ? <span className="text-gold">({itemCount})</span> : null}
+            <span>
+              {t("nav.cart")}
+              {hydrated && itemCount ? ` (${itemCount})` : ""}
+            </span>
+            <span>{hydrated ? `${subtotal.toFixed(2)} ${SITE.currency}` : SITE.currency}</span>
           </button>
-        </nav>
-        <div className="border-t border-line p-4 pb-[max(1rem,env(safe-area-inset-bottom))]">
-          <LanguageSwitcher />
         </div>
       </aside>
     </div>

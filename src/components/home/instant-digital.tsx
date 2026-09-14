@@ -11,7 +11,9 @@ const IDS = ["psn-store", "steam-wallet", "ea-fc-points", "pubg-uc", "xbox-gift"
 
 export function InstantDigital() {
   const { t, locale } = useLanguage();
-  const cards = IDS.map((id) => getProductById(id)!);
+  const cards = IDS.map((id) => getProductById(id)).filter(
+    (product): product is NonNullable<typeof product> => Boolean(product),
+  );
 
   return (
     <section className="border-y border-line bg-elevated/40 py-10 md:py-16">
@@ -36,7 +38,7 @@ export function InstantDigital() {
                 <div className="overflow-hidden">
                   <ProductCover
                     product={product}
-                    src={`/catalog/${product.id}.webp`}
+                    src={product.images[0]}
                     label={locale === "ar" ? product.nameAr : product.name}
                     className="aspect-[4/5] transition-transform duration-300 group-hover:scale-[1.03]"
                   />

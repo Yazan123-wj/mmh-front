@@ -6,14 +6,14 @@ import { Price } from "@/components/ui/price";
 import { ProductCover } from "@/components/product/product-artwork";
 import { Rating } from "@/components/ui/rating";
 import { StockBadge } from "@/components/ui/stock-badge";
-import { ICON_HIT } from "@/components/ui/control";
+import { FOCUS_RING, ICON_HIT } from "@/components/ui/control";
 import { useLanguage } from "@/context/language-context";
 import { useUi } from "@/context/ui-context";
 import { useWishlist } from "@/context/wishlist-context";
 import { discountPercent } from "@/lib/format";
 import { cn } from "@/lib/cn";
 import type { Product, ProductBadge } from "@/types";
-import { ChevronLeft, ChevronRight, Eye, Heart } from "lucide-react";
+import { ChevronLeft, ChevronRight, Eye, Heart, Plus } from "lucide-react";
 import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
 
@@ -28,17 +28,105 @@ const BADGE_KEYS: Record<ProductBadge, string> = {
   topup: "common.topup",
 };
 
-export function ProductCard({ product, layout = "grid" }: { product: Product; layout?: "grid" | "list" }) {
+export function ProductCard({
+  product,
+  layout = "grid",
+  variant = "default",
+}: {
+  product: Product;
+  layout?: "grid" | "list";
+  variant?: "default" | "category";
+}) {
   const { t, locale } = useLanguage();
   const { toggle, has } = useWishlist();
   const { openQuickView } = useUi();
   const wished = has(product.id);
   const sale = discountPercent(product.priceJod, product.compareAtPriceJod);
-  const cardBadges = product.badges.filter((badge) => badge !== "digital").slice(0, 2);
+  const cardBadges = product.badges.filter((badge) => badge !== "digital" && badge !== "instant").slice(0, 2);
   const start = product.digitalOptions.denominations[0];
   const region = product.digitalOptions.regions[0];
-
+  const showInstant = product.badges.includes("instant") || product.digitalOptions.instantCode;
   const list = layout === "list";
+
+  if (variant === "category") {
+    return (
+      <article className="group relative flex h-full flex-col overflow-hidden rounded-md border border-line/80 bg-card">
+        <div className="relative overflow-hidden">
+          <Link href={`/product/${product.slug}`} className="relative block">
+            <div className="transition-transform duration-500 [@media(hover:hover)]:group-hover:scale-[1.03]">
+              <ProductCover
+                product={product}
+                shot="cover"
+                label={locale === "ar" ? product.nameAr : product.name}
+                showTypeBadge={false}
+              />
+            </div>
+            {showInstant ? (
+              <span className="pointer-events-none absolute start-2 top-2 z-10 rounded-sm bg-brand-deep px-2 py-1 text-[10px] font-semibold uppercase tracking-wide text-white shadow-sm">
+                {t("common.instant")}
+              </span>
+            ) : null}
+            {!product.inStock ? (
+              <span className="pointer-events-none absolute inset-0 z-10 flex items-center justify-center bg-deep/55 text-sm font-semibold text-white">
+                {t("common.outOfStock")}
+              </span>
+            ) : null}
+          </Link>
+          <div className="absolute start-2 top-1/2 z-20 hidden -translate-y-1/2 flex-col gap-2 opacity-0 transition [@media(hover:hover)]:group-hover:opacity-100 sm:flex">
+            <button
+              type="button"
+              className={cn(ICON_HIT, "h-9 w-9 border border-white/25 bg-deep/70 text-white backdrop-blur", wished && "text-gold")}
+              onClick={() => toggle(product.id)}
+              aria-label={t("common.wishlist")}
+              aria-pressed={wished}
+            >
+              <Heart className={cn("h-4 w-4", wished && "fill-gold")} />
+            </button>
+            <button
+              type="button"
+              className={cn(ICON_HIT, "h-9 w-9 border border-white/25 bg-deep/70 text-white backdrop-blur")}
+              onClick={() => openQuickView(product.slug)}
+              aria-label={t("common.quickView")}
+            >
+              <Eye className="h-4 w-4" />
+            </button>
+          </div>
+        </div>
+
+        <div className="flex min-w-0 flex-1 flex-col gap-2 p-3">
+          <span className="inline-flex w-fit max-w-full truncate rounded-sm bg-deep px-2 py-1 text-[10px] font-semibold uppercase tracking-wide text-fg">
+            {locale === "ar" ? product.digitalOptions.platformLabelAr : product.digitalOptions.platformLabel}
+          </span>
+          <Link
+            href={`/product/${product.slug}`}
+            className="line-clamp-2 min-h-10 text-sm font-semibold leading-5 text-fg transition hover:text-gold"
+          >
+            {locale === "ar" ? product.nameAr : product.name}
+          </Link>
+          <p className="line-clamp-1 text-xs text-muted">
+            {locale === "ar" ? product.shortDescriptionAr : product.shortDescription}
+          </p>
+          <Price
+            amount={product.priceJod}
+            compareAt={product.compareAtPriceJod}
+            locale={locale}
+            size="sm"
+            className="mt-auto [&>span:first-child]:text-fg [&>span:last-child]:text-muted"
+          />
+          <Link
+            href={`/product/${product.slug}`}
+            className={cn(
+              "mt-1 inline-flex h-10 w-full items-center justify-center gap-1.5 rounded-md border border-fg/35 bg-transparent text-xs font-semibold text-fg transition hover:border-gold hover:text-gold",
+              FOCUS_RING,
+            )}
+          >
+            <Plus className="h-3.5 w-3.5" />
+            {t("common.addToCart")}
+          </Link>
+        </div>
+      </article>
+    );
+  }
 
   return (
     <article
@@ -103,7 +191,7 @@ export function ProductCard({ product, layout = "grid" }: { product: Product; la
           ) : null}
         </div>
         <div className="mt-2 flex items-end justify-between gap-2 sm:mt-3 sm:gap-3">
-          <Price amount={product.priceJod} compareAt={product.compareAtPriceJod} locale={locale} />
+          <Price amount={product.priceJod} compareAt={product.compareAtPriceJod} locale={locale} className="[&>span:first-child]:text-brand-deep" />
           <span className="hidden sm:inline">
             <StockBadge
               inStock={product.inStock}
@@ -157,14 +245,26 @@ export function DigitalCard({ product }: { product: Product }) {
 export function ProductGrid({
   products,
   view = "grid",
+  density = "default",
+  cardVariant = "default",
 }: {
   products: Product[];
   view?: "grid" | "list";
+  density?: "default" | "dense";
+  cardVariant?: "default" | "category";
 }) {
   return (
-    <div className={cn(view === "list" ? "space-y-3 sm:space-y-4" : "grid grid-cols-2 gap-2.5 sm:gap-3 md:grid-cols-3 md:gap-5 lg:grid-cols-4")}>
+    <div
+      className={cn(
+        view === "list"
+          ? "space-y-3 sm:space-y-4"
+          : density === "dense"
+            ? "grid grid-cols-2 gap-2 sm:grid-cols-3 sm:gap-2.5 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6"
+            : "grid grid-cols-2 gap-2.5 sm:gap-3 md:grid-cols-3 md:gap-5 lg:grid-cols-4",
+      )}
+    >
       {products.map((product) => (
-        <ProductCard key={product.id} product={product} layout={view} />
+        <ProductCard key={product.id} product={product} layout={view} variant={cardVariant} />
       ))}
     </div>
   );

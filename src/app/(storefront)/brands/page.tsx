@@ -1,11 +1,12 @@
 import { BRANDS } from "@/data/brands";
-import { PRODUCTS } from "@/data/products";
 import { pageMeta } from "@/lib/seo";
+import { loadPublishedCatalog } from "@/server/catalog/map";
 import Link from "next/link";
 
 export const metadata = pageMeta("Brands sold by MMH", "PlayStation, Steam, Roblox, PUBG and more — sold by MMH, not owned by MMH.", "/brands");
 
-export default function BrandsPage() {
+export default async function BrandsPage() {
+  const products = await loadPublishedCatalog();
   return (
     <div className="container-mmh py-6 sm:py-10">
       <h1 className="text-2xl font-semibold sm:text-3xl">Brands sold by MMH</h1>
@@ -14,7 +15,7 @@ export default function BrandsPage() {
       </p>
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
         {BRANDS.map((brand) => {
-          const count = PRODUCTS.filter((product) => product.brand === brand.name).length;
+          const count = products.filter((product) => product.brand === brand.name).length;
           return (
             <article key={brand.slug} id={brand.slug} className="rounded-[12px] border border-line bg-card p-5">
               <h2 className="text-lg font-semibold">{brand.name}</h2>

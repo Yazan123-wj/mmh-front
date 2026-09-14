@@ -2,6 +2,7 @@
 
 import { CATEGORIES } from "@/data/categories";
 import { PRODUCTS } from "@/data/products";
+import { getSnapshotCategories, getSnapshotProducts } from "@/lib/catalog-snapshot";
 import { useLanguage } from "@/context/language-context";
 import { ProductArtwork } from "@/components/product/product-artwork";
 import { Price } from "@/components/ui/price";
@@ -45,8 +46,10 @@ const MEGA: Record<MegaKey, { slugs: string[]; featured?: string }> = {
 export function MegaMenu({ type, onNavigate }: { type: MegaKey; onNavigate?: () => void }) {
   const { t, locale } = useLanguage();
   const config = MEGA[type];
-  const cats = CATEGORIES.filter((category) => config.slugs.includes(category.slug));
-  const featured = PRODUCTS.find((product) => product.id === config.featured);
+  const categorySource = getSnapshotCategories();
+  const productSource = getSnapshotProducts();
+  const cats = (categorySource.length ? categorySource : CATEGORIES).filter((category) => config.slugs.includes(category.slug));
+  const featured = (productSource.length ? productSource : PRODUCTS).find((product) => product.id === config.featured);
 
   return (
     <div className="container-mmh grid gap-6 py-6 lg:grid-cols-[1fr_260px]" role="navigation" aria-label={t("nav.shop")}>

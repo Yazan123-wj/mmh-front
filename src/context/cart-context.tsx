@@ -3,7 +3,6 @@
 import { getProductById } from "@/data/products";
 import { linePrice } from "@/lib/cart";
 import { uid } from "@/lib/id";
-import { SITE } from "@/config/site";
 import { STORAGE_KEYS } from "@/lib/storage";
 import { useHydrated, useLocalStorage } from "@/hooks/use-local-storage";
 import type { CartDigitalMeta, CartItem } from "@/types";
@@ -35,7 +34,7 @@ interface CartContextValue {
   promoCode: string;
   promoError: string | null;
   discount: number;
-  applyPromo: (code: string) => boolean;
+  applyPromo: (code: string) => Promise<boolean>;
   lastAddedId: string | null;
 }
 
@@ -46,6 +45,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
   const hydrated = useHydrated();
   const [promoCode, setPromoCode] = useState("");
   const [promoError, setPromoError] = useState<string | null>(null);
+  const [discount, setDiscount] = useState(0);
   const [lastAddedId, setLastAddedId] = useState<string | null>(null);
 
   const addItem = useCallback(
@@ -111,19 +111,26 @@ export function CartProvider({ children }: { children: ReactNode }) {
     setItems([]);
     setPromoCode("");
     setPromoError(null);
+    setDiscount(0);
   }, [setItems]);
 
-  const applyPromo = useCallback((code: string) => {
+  const applyPromo = useCallback(async (code: string) => {
     const normalized = code.trim().toUpperCase();
-    if (normalized in SITE.promoCodes) {
+    try {
+      const { validateStorefrontCoupon } = await import("@/server/actions/checkout");
+      const result = await validateStorefrontCoupon({ code: normalized, items: items.map((item) => ({ variantId: item.digital?.denominationId ?? "", quantity: item.quantity })) });
+      if (!result.valid) throw new Error("invalid");
       setPromoCode(normalized);
       setPromoError(null);
+      setDiscount(result.discountJod);
       return true;
+    } catch {
+      setPromoCode("");
+      setPromoError("bad");
+      setDiscount(0);
+      return false;
     }
-    setPromoCode("");
-    setPromoError("bad");
-    return false;
-  }, []);
+  }, [items]);
 
   const subtotal = useMemo(
     () =>
@@ -134,13 +141,6 @@ export function CartProvider({ children }: { children: ReactNode }) {
       }, 0),
     [items],
   );
-
-  const discount = useMemo(() => {
-    if (!promoCode) return 0;
-    const rule = SITE.promoCodes[promoCode as keyof typeof SITE.promoCodes];
-    if (!rule) return 0;
-    return rule.type === "percent" ? (subtotal * rule.value) / 100 : Math.min(rule.value, subtotal);
-  }, [promoCode, subtotal]);
 
   const itemCount = useMemo(() => items.reduce((sum, item) => sum + item.quantity, 0), [items]);
 

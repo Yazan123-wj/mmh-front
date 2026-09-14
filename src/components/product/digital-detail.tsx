@@ -1,6 +1,9 @@
 "use client";
 
+import { LoginModal } from "@/components/auth/login-modal";
+import { QuickPayModal, type QuickBuyPayload } from "@/components/checkout/quick-pay-modal";
 import { ProductGallery } from "@/components/product/product-gallery";
+import { ProductCover } from "@/components/product/product-artwork";
 import { ProductRail } from "@/components/product/product-card";
 import { Badge } from "@/components/ui/badge";
 import { Breadcrumbs } from "@/components/ui/breadcrumbs";
@@ -9,24 +12,28 @@ import { Field } from "@/components/ui/field";
 import { Price } from "@/components/ui/price";
 import { QuantitySelector } from "@/components/ui/quantity-selector";
 import { Rating } from "@/components/ui/rating";
-import { SelectField } from "@/components/ui/select-field";
 import { StockBadge } from "@/components/ui/stock-badge";
-import { FaqAccordion } from "@/components/ui/faq-accordion";
-import { DIGITAL_PRODUCT_FAQS } from "@/data/faq";
+import { getCategory } from "@/data/categories";
+import { getAlsoBoughtProducts, getMayLikeProducts, getRelatedProducts } from "@/data/products";
 import { useCart } from "@/context/cart-context";
 import { useLanguage } from "@/context/language-context";
 import { useUi } from "@/context/ui-context";
 import { useWishlist } from "@/context/wishlist-context";
-import { getRelatedProducts } from "@/data/products";
+import { useLocalStorage } from "@/hooks/use-local-storage";
 import { discountPercent, formatJod } from "@/lib/format";
 import { defaultRegionId, denominationsForRegion, isGiftCardProduct, matchDenominationId } from "@/lib/digital-options";
+import { STORAGE_KEYS } from "@/lib/storage";
 import { isValidEmail, isValidDemoPhone, validateCustomerField } from "@/lib/validation";
 import type { DeliveryMethod, GiftIntent, Product } from "@/types";
-import { Heart } from "lucide-react";
-import { useRouter } from "next/navigation";
-import { useMemo, useState } from "react";
+import { ArrowUp, Heart } from "lucide-react";
+import Link from "next/link";
+import { useSession } from "next-auth/react";
+import { useEffect, useMemo, useState } from "react";
 import { choiceClass, FOCUS_RING, ICON_HIT } from "@/components/ui/control";
 import { cn } from "@/lib/cn";
+
+const EMPTY_RECENT_IDS: string[] = [];
+const PAYMENT_METHODS = ["Visa", "Mastercard", "Apple Pay", "CliQ"] as const;
 
 function deliveryLabel(method: DeliveryMethod, t: (key: string) => string) {
   if (method === "email") return t("common.emailDelivery");
@@ -35,7 +42,15 @@ function deliveryLabel(method: DeliveryMethod, t: (key: string) => string) {
   return t("common.instant");
 }
 
-type InfoTab = "how" | "details" | "region" | "delivery" | "refund";
+function preferredCatalogImage(product: Product) {
+  const webp = product.images.find((src) => /\.webp($|\?)/i.test(src));
+  if (webp) return webp;
+  const fromProduct = product.images.find((src) => /\.(svg|png|jpe?g|avif)($|\?)/i.test(src));
+  if (fromProduct) return fromProduct;
+  return `/catalog/${product.id}.webp`;
+}
+
+type PanelTab = "options" | "details" | "reviews";
 
 export function DigitalProductDetail({ product }: { product: Product }) {
   const options = product.digitalOptions;
@@ -47,7 +62,11 @@ export function DigitalProductDetail({ product }: { product: Product }) {
   const { addItem } = useCart();
   const { toggle, has } = useWishlist();
   const { setCartOpen } = useUi();
-  const router = useRouter();
+  const { data: session, status } = useSession();
+  const [recentIds, setRecentIds] = useLocalStorage<string[]>(STORAGE_KEYS.recentlyViewed, EMPTY_RECENT_IDS);
+  const [loginOpen, setLoginOpen] = useState(false);
+  const [payOpen, setPayOpen] = useState(false);
+  const [pendingBuy, setPendingBuy] = useState<QuickBuyPayload | null>(null);
 
   const initialRegion = defaultRegionId(options.regions);
   const [regionId, setRegionId] = useState(initialRegion);
@@ -56,6 +75,7 @@ export function DigitalProductDetail({ product }: { product: Product }) {
   );
   const [recipientPhone, setRecipientPhone] = useState("");
   const [giftMessage, setGiftMessage] = useState("");
+  const [sendAsGift, setSendAsGift] = useState(false);
   const [method, setMethod] = useState<DeliveryMethod>("account");
   const [showDelivery, setShowDelivery] = useState(false);
   const [contact, setContact] = useState("");
@@ -63,15 +83,40 @@ export function DigitalProductDetail({ product }: { product: Product }) {
   const [guideId, setGuideId] = useState<string | null>(null);
   const [confirmed, setConfirmed] = useState(false);
   const [qty, setQty] = useState(1);
-  const [infoTab, setInfoTab] = useState<InfoTab>("how");
-  const related = getRelatedProducts(product);
+  const [panelTab, setPanelTab] = useState<PanelTab>("options");
   const wished = has(product.id);
 
+  useEffect(() => {
+    setRecentIds((current) => {
+      const next = [product.id, ...current.filter((id) => id !== product.id)].slice(0, 12);
+      if (next.length === current.length && next.every((id, index) => id === current[index])) return current;
+      return next;
+    });
+  }, [product.id, setRecentIds]);
+
+  const similar = useMemo(() => getRelatedProducts(product, 8), [product]);
+  const alsoBought = useMemo(() => getAlsoBoughtProducts(product, 6), [product]);
+  const mayLike = useMemo(() => getMayLikeProducts(product, recentIds, 8), [product, recentIds]);
+  const category = getCategory(product.category);
+  const categoryHref = category?.href ?? (isTopup ? "/game-top-ups" : "/gift-cards");
+  const categoryLabel = category
+    ? locale === "ar"
+      ? category.nameAr
+      : category.name
+    : t(isTopup ? "nav.topups" : "nav.gifts");
+
   const visibleDenoms = useMemo(() => denominationsForRegion(product, regionId), [product, regionId]);
+  const hasAmountChoices = visibleDenoms.length > 1;
+  const hasConfigurableOptions =
+    multiRegion ||
+    hasAmountChoices ||
+    options.requiredCustomerFields.length > 0 ||
+    isGift ||
+    options.deliveryMethods.length > 1;
   const denomination = options.denominations.find((item) => item.id === denominationId);
   const region = options.regions.find((item) => item.id === regionId);
   const sale = discountPercent(denomination?.priceJod ?? product.priceJod, denomination?.compareAtPriceJod);
-  const sendingGift = isGift;
+  const sendingGift = isGift && sendAsGift;
   const deliveryMethod: DeliveryMethod = sendingGift ? "sms" : method;
   const deliveryContact = sendingGift ? recipientPhone.trim() : contact;
   const needsContact = deliveryMethod === "email" || deliveryMethod === "sms";
@@ -87,8 +132,11 @@ export function DigitalProductDetail({ product }: { product: Product }) {
   const price = useMemo(() => (denomination?.priceJod ?? product.priceJod) * qty, [denomination, product.priceJod, qty]);
   const platformName = locale === "ar" ? options.platformLabelAr : options.platformLabel;
   const showBrand = product.brand.trim().toLowerCase() !== platformName.trim().toLowerCase();
-  const regionName = region ? (locale === "ar" ? region.nameAr : region.name) : null;
+  const productName = locale === "ar" ? product.nameAr : product.name;
+  const thumbSrc = preferredCatalogImage(product);
   const denomLabel = denomination ? (locale === "ar" ? denomination.labelAr : denomination.label) : null;
+  const activeTab: PanelTab =
+    !hasConfigurableOptions && panelTab === "options" ? "details" : panelTab;
 
   const nextStep = !regionId
     ? t("product.needRegion")
@@ -101,10 +149,10 @@ export function DigitalProductDetail({ product }: { product: Product }) {
           : needsContact && !contactOk
             ? t("product.needContact")
             : !confirmed
-            ? t("product.needConfirm")
-            : !stockOk
-              ? t("product.stockOut")
-              : null;
+              ? t("product.needConfirm")
+              : !stockOk
+                ? t("product.stockOut")
+                : null;
 
   const selectRegion = (id: string) => {
     setRegionId(id);
@@ -122,39 +170,119 @@ export function DigitalProductDetail({ product }: { product: Product }) {
       deliveryContact: needsContact ? deliveryContact : "",
       platform: platformName,
       customerFields: { ...fields },
-      giftIntent: isGift ? ("recipient" as GiftIntent) : undefined,
+      giftIntent: isGift ? ((sendingGift ? "recipient" : "self") as GiftIntent) : undefined,
       recipientPhone: sendingGift ? recipientPhone.trim() : undefined,
       giftMessage: sendingGift ? giftMessage.trim() : undefined,
     };
   };
 
-  const add = (goCheckout = false) => {
+  const addToCart = () => {
     const digital = buildDigital();
     if (!ready || !digital) return;
     addItem({ productId: product.id, quantity: qty, digital });
-    if (goCheckout) router.push("/checkout");
-    else setCartOpen(true);
+    setCartOpen(true);
   };
 
-  const tabs: Array<{ id: InfoTab; label: string }> = [
-    { id: "how", label: t("product.tabHow") },
+  const startBuyNow = () => {
+    const digital = buildDigital();
+    if (!ready || !digital || !denomination) return;
+    const payload: QuickBuyPayload = {
+      product,
+      quantity: qty,
+      digital,
+      unitPriceJod: denomination.priceJod,
+    };
+    setPendingBuy(payload);
+    if (status === "authenticated" && session?.user?.email) {
+      setPayOpen(true);
+      return;
+    }
+    setLoginOpen(true);
+  };
+
+  const tabs: Array<{ id: PanelTab; label: string }> = [
+    ...(hasConfigurableOptions ? [{ id: "options" as const, label: t("product.tabOptions") }] : []),
     { id: "details", label: t("product.tabDetails") },
-    { id: "region", label: t("product.tabRegion") },
-    { id: "delivery", label: t("product.tabDelivery") },
-    { id: "refund", label: t("product.tabRefund") },
+    { id: "reviews", label: t("product.reviews") },
   ];
 
+  const buyFooter = (
+    <>
+      <div className="flex flex-wrap items-center gap-3">
+        <span className="text-sm text-muted">{t("product.qty")}</span>
+        <QuantitySelector value={qty} onChange={setQty} max={5} />
+        <button
+          type="button"
+          className={cn(ICON_HIT, "ms-auto border border-line", wished && "text-gold")}
+          onClick={() => toggle(product.id)}
+          aria-label={t("common.wishlist")}
+        >
+          <Heart className={cn("h-4 w-4", wished && "fill-gold")} />
+        </button>
+      </div>
+
+      <label className="flex cursor-pointer items-start gap-3 text-sm leading-5 text-muted">
+        <input
+          type="checkbox"
+          className={cn("mt-0.5 h-4 w-4 shrink-0 accent-[#F7C037]", FOCUS_RING)}
+          checked={confirmed}
+          onChange={(event) => setConfirmed(event.target.checked)}
+        />
+        <span>{t("product.confirmCombined")}</span>
+      </label>
+
+      <div className="flex items-center justify-between gap-3 rounded-xl bg-brand-deep px-4 py-3.5 text-white">
+        <span className="text-sm font-medium text-white/75">{t("product.optionPrice")}</span>
+        <Price
+          amount={price}
+          compareAt={denomination?.compareAtPriceJod ? denomination.compareAtPriceJod * qty : undefined}
+          locale={locale}
+          size="lg"
+          className="[&>span:first-child]:text-gold [&>span:last-child]:text-white/50"
+        />
+      </div>
+
+      {nextStep ? (
+        <p id="product-buy-hint" className="text-xs text-muted">
+          {nextStep}
+        </p>
+      ) : (
+        <p className="text-xs text-success">{t("product.digitalNotice")}</p>
+      )}
+
+      <div className="flex gap-2">
+        <Button className="min-h-12 flex-1" disabled={!ready} aria-describedby={nextStep ? "product-buy-hint" : undefined} onClick={addToCart}>
+          {t("product.add")}
+        </Button>
+        <Button className="min-h-12 flex-1" variant="outline" disabled={!ready} onClick={startBuyNow}>
+          {t("product.buyNow")}
+        </Button>
+      </div>
+
+      <div className="flex flex-wrap items-center justify-center gap-2 border-t border-line pt-4">
+        {PAYMENT_METHODS.map((methodName) => (
+          <span
+            key={methodName}
+            className="inline-flex min-h-8 items-center rounded-md border border-line bg-elevated px-2.5 text-[11px] font-semibold text-muted"
+          >
+            {methodName}
+          </span>
+        ))}
+      </div>
+    </>
+  );
+
   return (
-    <div className="container-mmh pb-28 pt-6 sm:py-8 xl:pb-10">
+    <div className="container-mmh pb-32 pt-5 sm:pt-7 xl:pb-36">
       <Breadcrumbs
         items={[
-          { href: "/", label: "MMH" },
-          { href: isTopup ? "/game-top-ups" : "/gift-cards", label: t(isTopup ? "nav.topups" : "nav.gifts") },
-          { label: locale === "ar" ? product.nameAr : product.name },
+          { href: "/", label: locale === "ar" ? "الرئيسية" : "Home" },
+          { href: categoryHref, label: categoryLabel },
+          { label: productName },
         ]}
       />
 
-      <div className="mt-6 grid items-start gap-8 lg:grid-cols-[minmax(0,0.9fr)_minmax(0,1.1fr)] lg:gap-12">
+      <div className="mt-5 grid items-start gap-8 lg:grid-cols-[minmax(0,0.95fr)_minmax(0,1.05fr)] lg:gap-10 xl:gap-12">
         <div className="lg:sticky lg:top-24">
           <ProductGallery product={product} />
         </div>
@@ -162,285 +290,359 @@ export function DigitalProductDetail({ product }: { product: Product }) {
         <div className="min-w-0">
           <div className="flex flex-wrap items-center gap-2">
             <Badge
-              badge={isTopup ? "topup" : isGift ? "digital" : "digital"}
+              badge={isTopup ? "topup" : "digital"}
               label={isTopup ? t("common.topup") : isGift ? t("gift.badge") : t("product.fulfillmentCode")}
             />
             {regionLocked ? <Badge badge="region_locked" label={t("common.regionLocked")} /> : null}
             {sale ? <Badge badge="sale" label={`-${sale}%`} /> : null}
           </div>
 
-          <p className="mt-4 text-xs font-semibold uppercase tracking-[0.16em] text-muted">
+          <p className="mt-3 text-xs font-semibold uppercase tracking-[0.16em] text-muted">
             {showBrand ? `${platformName} · ${product.brand}` : platformName}
           </p>
-          <h1 className="mt-2 text-3xl font-semibold tracking-tight sm:text-4xl">
-            {locale === "ar" ? product.nameAr : product.name}
-          </h1>
-          <p className="mt-3 max-w-xl text-sm leading-6 text-muted">
-            {locale === "ar" ? product.shortDescriptionAr : product.shortDescription}
-          </p>
+          <h1 className="mt-2 text-3xl font-bold tracking-tight sm:text-4xl">{productName}</h1>
+
           {product.reviewCount > 0 ? (
             <div className="mt-3">
               <Rating value={product.rating} count={product.reviewCount} reviewsLabel={t("common.reviews")} />
             </div>
           ) : null}
 
-          <div className="mt-6 flex flex-wrap items-end justify-between gap-3 border-y border-line py-5">
-            <div>
-              <Price
-                amount={price}
-                compareAt={denomination?.compareAtPriceJod ? denomination.compareAtPriceJod * qty : undefined}
-                locale={locale}
-                size="lg"
-              />
-              <div className="mt-2">
-                <StockBadge
-                  inStock={stockOk && product.inStock}
-                  inLabel={t("common.inStock")}
-                  lowLabel={t("common.lowStock")}
-                  outLabel={t("common.outOfStock")}
-                />
-              </div>
-            </div>
-            <div className="flex items-center gap-2">
-              <span className="text-sm text-muted">{t("product.qty")}</span>
-              <QuantitySelector value={qty} onChange={setQty} max={5} />
-            </div>
-          </div>
-
-          {multiRegion ? (
-            <div className="mt-6">
-              <SelectField label={t("product.stepRegion")} value={regionId} onChange={(event) => selectRegion(event.target.value)}>
-                {options.regions.map((item) => (
-                  <option key={item.id} value={item.id}>
-                    {locale === "ar" ? item.nameAr : item.name}
-                    {item.currency ? ` (${item.currency})` : ""}
-                  </option>
-                ))}
-              </SelectField>
-              {regionLocked ? <p className="mt-2 text-xs leading-5 text-muted">{t("product.lockedHint")}</p> : null}
-            </div>
-          ) : null}
-
-          <div className="mt-6">
-            <p className="mb-3 text-sm font-medium">{isTopup ? t("product.package") : t("product.stepAmount")}</p>
-            <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
-              {visibleDenoms.map((item) => {
-                const selected = denominationId === item.id;
-                return (
-                  <button
-                    key={item.id}
-                    type="button"
-                    disabled={item.inStock === false}
-                    aria-pressed={selected}
-                    onClick={() => setDenominationId(item.id)}
-                    className={choiceClass(selected, "flex min-h-[4.75rem] flex-col justify-center px-3 py-3 text-start disabled:opacity-40")}
-                  >
-                    <span className="text-base font-semibold">{locale === "ar" ? item.labelAr : item.label}</span>
-                    <span className="mt-1 text-xs text-muted">
-                      {formatJod(item.priceJod, locale)}
-                      {item.inStock === false ? ` · ${t("common.unavailable")}` : ""}
-                    </span>
-                  </button>
-                );
-              })}
-            </div>
-          </div>
-
-          {isGift ? (
-            <div className="mt-6">
-              <p className="mb-2 text-sm font-medium">{t("gift.who")}</p>
-              <p className="mb-3 text-xs leading-5 text-muted">{t("gift.process")}</p>
-              <Field
-                label={t("gift.recipientPhone")}
-                type="tel"
-                inputMode="tel"
-                value={recipientPhone}
-                onChange={(event) => setRecipientPhone(event.target.value)}
-                hint={t("gift.recipientPhoneHint")}
-                placeholder="+962 7X XXX XXXX"
-                error={recipientPhone && !isValidDemoPhone(recipientPhone) ? t("checkout.invalidPhone") : undefined}
-              />
-              <label className="mt-3 block space-y-1.5">
-                <span className="text-sm font-medium">{t("gift.message")}</span>
-                <textarea
-                  value={giftMessage}
-                  onChange={(event) => setGiftMessage(event.target.value)}
-                  placeholder={t("gift.messagePlaceholder")}
-                  rows={3}
-                  className="w-full rounded-[12px] border border-line bg-elevated px-3 py-2 text-sm"
-                />
-              </label>
-            </div>
-          ) : null}
-
-          {options.requiredCustomerFields.map((field) => (
-            <div key={field.id} className="mt-6">
-              <Field
-                label={locale === "ar" ? field.labelAr : field.label}
-                placeholder={locale === "ar" ? field.placeholderAr : field.placeholder}
-                value={fields[field.id] ?? ""}
-                hint={locale === "ar" ? field.helpTextAr : field.helpText}
-                error={
-                  fields[field.id] && !validateCustomerField(field.id, fields[field.id], field.required)
-                    ? t("product.playerIdError")
-                    : undefined
-                }
-                onChange={(event) => setFields((current) => ({ ...current, [field.id]: event.target.value }))}
-              />
-              <button type="button" className="mt-1 text-xs text-gold" onClick={() => setGuideId(guideId === field.id ? null : field.id)}>
-                {t("product.findId")}
-              </button>
-              {guideId === field.id ? (
-                <p className="mt-2 rounded-[12px] border border-line bg-card p-3 text-xs leading-5 text-muted">
-                  {locale === "ar" ? field.helpTextAr : field.helpText}
-                </p>
-              ) : null}
-            </div>
-          ))}
-
-          {isGift ? (
-            <div className="mt-6 rounded-[12px] border border-line bg-card/50 p-4">
-              <p className="text-sm font-medium">{t("gift.redeemTitle")}</p>
-              <ol className="mt-2 list-decimal space-y-1 ps-5 text-xs leading-5 text-muted">
-                {(locale === "ar" ? options.howToUseAr : options.howToUse).slice(0, 4).map((step) => (
-                  <li key={step}>{step}</li>
-                ))}
-              </ol>
-            </div>
-          ) : null}
-
-          {!sendingGift && options.deliveryMethods.length > 1 ? (
-            <div className="mt-5">
-              <button
-                type="button"
-                className="text-xs font-medium text-gold"
-                onClick={() => setShowDelivery((open) => !open)}
-                aria-expanded={showDelivery}
-              >
-                {t("product.deliveryAdvanced")}
-                {!showDelivery && method !== "account" ? ` · ${deliveryLabel(method, t)}` : ""}
-              </button>
-              {showDelivery ? (
-                <div className="mt-3 flex flex-wrap gap-2">
-                  {options.deliveryMethods.map((item) => {
-                    const selected = method === item;
-                    return (
-                      <button
-                        key={item}
-                        type="button"
-                        aria-pressed={selected}
-                        onClick={() => setMethod(item)}
-                        className={choiceClass(selected, "px-3 py-2")}
-                      >
-                        {deliveryLabel(item, t)}
-                      </button>
-                    );
-                  })}
-                </div>
-              ) : null}
-              {needsContact ? (
-                <div className="mt-3">
-                  <Field
-                    label={t("product.deliveryContact")}
-                    value={contact}
-                    onChange={(event) => setContact(event.target.value)}
-                    placeholder={method === "email" ? "name@example.com" : "+962 7X XXX XXXX"}
-                  />
-                </div>
-              ) : null}
-            </div>
-          ) : null}
-
-          <label className="mt-6 flex cursor-pointer items-start gap-3 text-sm leading-5 text-muted">
-            <input
-              type="checkbox"
-              className={cn("mt-0.5 h-4 w-4 shrink-0 accent-[#F7C037]", FOCUS_RING)}
-              checked={confirmed}
-              onChange={(event) => setConfirmed(event.target.checked)}
+          <div className="mt-4 flex flex-wrap items-center gap-3">
+            <StockBadge
+              inStock={stockOk && product.inStock}
+              inLabel={t("product.available")}
+              lowLabel={t("common.lowStock")}
+              outLabel={t("common.outOfStock")}
             />
-            <span>{t("product.confirmCombined")}</span>
-          </label>
-
-          <div className="mt-5 hidden gap-2 lg:flex">
-            <Button className="min-h-12 flex-1" disabled={!ready} aria-describedby={nextStep ? "product-buy-hint" : undefined} onClick={() => add(false)}>
-              {t("product.add")}
-            </Button>
-            <button
-              type="button"
-              className={cn(ICON_HIT, "border border-line bg-card", wished && "text-gold")}
-              onClick={() => toggle(product.id)}
-              aria-label={t("common.wishlist")}
-            >
-              <Heart className={cn("h-4 w-4", wished && "fill-gold")} />
-            </button>
+            <span className="text-sm text-muted">
+              {t("product.categoryLabel")}:{" "}
+              <Link href={categoryHref} className="font-semibold text-brand-deep hover:text-fg">
+                {categoryLabel}
+              </Link>
+            </span>
           </div>
-          <Button className="mt-2 hidden min-h-12 w-full lg:inline-flex" variant="outline" disabled={!ready} onClick={() => add(true)}>
-            {t("product.buyNow")}
-          </Button>
-          {nextStep ? (
-            <p id="product-buy-hint" className="mt-3 hidden text-xs text-muted lg:block">
-              {nextStep}
-            </p>
-          ) : (
-            <p className="mt-3 hidden text-xs text-success lg:block">{t("product.digitalNotice")}</p>
-          )}
+
+          {!hasConfigurableOptions ? (
+            <div className="mt-6 space-y-5 rounded-2xl border border-line bg-card p-4 sm:p-5">
+              <div>
+                <p className="text-sm font-medium text-fg">{t("product.simpleBuy")}</p>
+                {denomLabel ? (
+                  <p className="mt-2 text-sm text-muted">
+                    {t("product.fixedAmount")}: <span className="font-semibold text-fg">{denomLabel}</span>
+                    {region ? ` · ${locale === "ar" ? region.nameAr : region.name}` : ""}
+                  </p>
+                ) : null}
+              </div>
+              {buyFooter}
+            </div>
+          ) : null}
+
+          <div className="mt-6 overflow-hidden rounded-2xl border border-line bg-card">
+            <div className="flex gap-1 border-b border-line bg-elevated/70 p-1.5">
+              {tabs.map((tab) => (
+                <button
+                  key={tab.id}
+                  type="button"
+                  onClick={() => setPanelTab(tab.id)}
+                  className={cn(
+                    "min-h-10 flex-1 rounded-xl px-3 text-sm font-semibold transition-colors",
+                    activeTab === tab.id ? "bg-brand-deep text-white shadow-sm" : "text-muted hover:bg-card hover:text-fg",
+                  )}
+                >
+                  {tab.label}
+                </button>
+              ))}
+            </div>
+
+            <div className="p-4 sm:p-5">
+              {activeTab === "options" && hasConfigurableOptions ? (
+                <div className="space-y-5">
+                  {multiRegion ? (
+                    <div>
+                      <p className="mb-2.5 text-sm font-medium">{t("product.stepRegion")}</p>
+                      <div className="flex flex-wrap gap-2">
+                        {options.regions.map((item) => {
+                          const selected = regionId === item.id;
+                          return (
+                            <button
+                              key={item.id}
+                              type="button"
+                              aria-pressed={selected}
+                              onClick={() => selectRegion(item.id)}
+                              className={choiceClass(selected, "min-h-11 px-3.5 py-2")}
+                            >
+                              {locale === "ar" ? item.nameAr : item.name}
+                              {item.currency ? ` · ${item.currency}` : ""}
+                            </button>
+                          );
+                        })}
+                      </div>
+                      {regionLocked ? <p className="mt-2 text-xs leading-5 text-muted">{t("product.lockedHint")}</p> : null}
+                    </div>
+                  ) : null}
+
+                  {hasAmountChoices ? (
+                    <div>
+                      <p className="mb-2.5 text-sm font-medium">{isTopup ? t("product.package") : t("product.stepAmount")}</p>
+                      <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
+                        {visibleDenoms.map((item) => {
+                          const selected = denominationId === item.id;
+                          return (
+                            <button
+                              key={item.id}
+                              type="button"
+                              disabled={item.inStock === false}
+                              aria-pressed={selected}
+                              onClick={() => setDenominationId(item.id)}
+                              className={choiceClass(selected, "flex min-h-[4.5rem] flex-col justify-center px-3 py-3 text-start disabled:opacity-40")}
+                            >
+                              <span className="text-base font-semibold">{locale === "ar" ? item.labelAr : item.label}</span>
+                              <span className="mt-1 text-xs text-muted">
+                                {formatJod(item.priceJod, locale)}
+                                {item.inStock === false ? ` · ${t("common.unavailable")}` : ""}
+                              </span>
+                            </button>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  ) : denomLabel ? (
+                    <p className="rounded-xl border border-line bg-elevated px-3 py-3 text-sm text-muted">
+                      {t("product.fixedAmount")}: <span className="font-semibold text-fg">{denomLabel}</span>
+                    </p>
+                  ) : null}
+
+                  {options.requiredCustomerFields.map((field) => (
+                    <div key={field.id}>
+                      <Field
+                        label={locale === "ar" ? field.labelAr : field.label}
+                        placeholder={locale === "ar" ? field.placeholderAr : field.placeholder}
+                        value={fields[field.id] ?? ""}
+                        hint={locale === "ar" ? field.helpTextAr : field.helpText}
+                        error={
+                          fields[field.id] && !validateCustomerField(field.id, fields[field.id], field.required)
+                            ? t("product.playerIdError")
+                            : undefined
+                        }
+                        onChange={(event) => setFields((current) => ({ ...current, [field.id]: event.target.value }))}
+                      />
+                      <button type="button" className="mt-1 text-xs text-gold" onClick={() => setGuideId(guideId === field.id ? null : field.id)}>
+                        {t("product.findId")}
+                      </button>
+                      {guideId === field.id ? (
+                        <p className="mt-2 rounded-[12px] border border-line bg-elevated p-3 text-xs leading-5 text-muted">
+                          {locale === "ar" ? field.helpTextAr : field.helpText}
+                        </p>
+                      ) : null}
+                    </div>
+                  ))}
+
+                  {isGift ? (
+                    <div className="space-y-3">
+                      <label className="flex cursor-pointer items-start gap-3 rounded-[12px] border border-line bg-elevated px-3 py-3 text-sm leading-5">
+                        <input
+                          type="checkbox"
+                          className={cn("mt-0.5 h-4 w-4 shrink-0 accent-[#F7C037]", FOCUS_RING)}
+                          checked={sendAsGift}
+                          onChange={(event) => setSendAsGift(event.target.checked)}
+                        />
+                        <span>
+                          <span className="block font-semibold text-fg">{t("gift.send")}</span>
+                          <span className="mt-1 block text-xs text-muted">{t("gift.sendHint")}</span>
+                        </span>
+                      </label>
+                      {sendingGift ? (
+                        <div>
+                          <Field
+                            label={t("gift.recipientPhone")}
+                            type="tel"
+                            inputMode="tel"
+                            value={recipientPhone}
+                            onChange={(event) => setRecipientPhone(event.target.value)}
+                            hint={t("gift.recipientPhoneHint")}
+                            placeholder="+962 7X XXX XXXX"
+                            error={recipientPhone && !isValidDemoPhone(recipientPhone) ? t("checkout.invalidPhone") : undefined}
+                          />
+                          <label className="mt-3 block space-y-1.5">
+                            <span className="text-sm font-medium">{t("gift.message")}</span>
+                            <textarea
+                              value={giftMessage}
+                              onChange={(event) => setGiftMessage(event.target.value)}
+                              placeholder={t("gift.messagePlaceholder")}
+                              rows={3}
+                              className="w-full rounded-[12px] border border-line bg-elevated px-3 py-2 text-sm"
+                            />
+                          </label>
+                        </div>
+                      ) : (
+                        <p className="text-xs leading-5 text-muted">{t("gift.forMeHint")}</p>
+                      )}
+                    </div>
+                  ) : null}
+
+                  {!sendingGift && options.deliveryMethods.length > 1 ? (
+                    <div>
+                      <button
+                        type="button"
+                        className="text-xs font-medium text-gold"
+                        onClick={() => setShowDelivery((open) => !open)}
+                        aria-expanded={showDelivery}
+                      >
+                        {t("product.deliveryAdvanced")}
+                        {!showDelivery && method !== "account" ? ` · ${deliveryLabel(method, t)}` : ""}
+                      </button>
+                      {showDelivery ? (
+                        <div className="mt-3 flex flex-wrap gap-2">
+                          {options.deliveryMethods.map((item) => {
+                            const selected = method === item;
+                            return (
+                              <button
+                                key={item}
+                                type="button"
+                                aria-pressed={selected}
+                                onClick={() => setMethod(item)}
+                                className={choiceClass(selected, "px-3 py-2")}
+                              >
+                                {deliveryLabel(item, t)}
+                              </button>
+                            );
+                          })}
+                        </div>
+                      ) : null}
+                      {needsContact ? (
+                        <div className="mt-3">
+                          <Field
+                            label={t("product.deliveryContact")}
+                            value={contact}
+                            onChange={(event) => setContact(event.target.value)}
+                            placeholder={method === "email" ? "name@example.com" : "+962 7X XXX XXXX"}
+                          />
+                        </div>
+                      ) : null}
+                    </div>
+                  ) : null}
+
+                  {buyFooter}
+                </div>
+              ) : null}
+
+              {activeTab === "details" ? (
+                <div className="space-y-5 text-sm leading-7 text-muted">
+                  <div>
+                    <h2 className="text-base font-semibold text-fg">{t("product.description")}</h2>
+                    <p className="mt-2">{locale === "ar" ? product.descriptionAr : product.description}</p>
+                  </div>
+                  <div>
+                    <h2 className="text-base font-semibold text-fg">{t("product.howToUseHeading")}</h2>
+                    <ol className="mt-2 list-decimal space-y-2 ps-5">
+                      {(locale === "ar" ? options.howToUseAr : options.howToUse).map((step) => (
+                        <li key={step}>{step}</li>
+                      ))}
+                    </ol>
+                  </div>
+                  <div>
+                    <h2 className="text-base font-semibold text-fg">{t("product.regionCompat")}</h2>
+                    <p className="mt-2">{locale === "ar" ? options.regionRestrictionsAr : options.regionRestrictions}</p>
+                  </div>
+                  <div>
+                    <h2 className="text-base font-semibold text-fg">{t("product.deliveryInfo")}</h2>
+                    <p className="mt-2">{locale === "ar" ? options.deliveryEstimateAr : options.deliveryEstimate}</p>
+                  </div>
+                  <div>
+                    <h2 className="text-base font-semibold text-fg">{t("product.refundPolicy")}</h2>
+                    <p className="mt-2">{locale === "ar" ? options.refundPolicyTextAr : options.refundPolicyText}</p>
+                  </div>
+                </div>
+              ) : null}
+
+              {activeTab === "reviews" ? (
+                <div>
+                  {product.reviewCount > 0 ? (
+                    <div className="mb-4">
+                      <Rating value={product.rating} count={product.reviewCount} reviewsLabel={t("common.reviews")} />
+                    </div>
+                  ) : null}
+                  <p className="text-sm leading-6 text-muted">{t("product.reviewsEmpty")}</p>
+                </div>
+              ) : null}
+            </div>
+          </div>
         </div>
       </div>
 
-      <section className="mt-14">
-        <div className="flex flex-wrap gap-2 border-b border-line pb-3">
-          {tabs.map((tab) => (
-            <button
-              key={tab.id}
-              type="button"
-              onClick={() => setInfoTab(tab.id)}
-              className={cn(
-                "rounded-full px-3.5 py-1.5 text-sm transition-colors",
-                infoTab === tab.id ? "bg-gold/15 text-gold" : "text-muted hover:text-fg",
-              )}
-            >
-              {tab.label}
-            </button>
-          ))}
-        </div>
-        <div className="mt-5 max-w-3xl text-sm leading-7 text-muted">
-          {infoTab === "how" ? (
-            <ol className="list-decimal space-y-2 ps-5">
-              {(locale === "ar" ? options.howToUseAr : options.howToUse).map((step) => (
-                <li key={step}>{step}</li>
-              ))}
-            </ol>
-          ) : null}
-          {infoTab === "details" ? <p>{locale === "ar" ? product.descriptionAr : product.description}</p> : null}
-          {infoTab === "region" ? <p>{locale === "ar" ? options.regionRestrictionsAr : options.regionRestrictions}</p> : null}
-          {infoTab === "delivery" ? <p>{locale === "ar" ? options.deliveryEstimateAr : options.deliveryEstimate}</p> : null}
-          {infoTab === "refund" ? <p>{locale === "ar" ? options.refundPolicyTextAr : options.refundPolicyText}</p> : null}
-        </div>
-      </section>
+      {similar.length ? (
+        <section className="mt-12 sm:mt-14">
+          <h2 className="mb-5 text-xl font-bold tracking-tight">{t("product.similar")}</h2>
+          <ProductRail products={similar} />
+        </section>
+      ) : null}
 
-      <section className="mt-14">
-        <h2 className="mb-6 text-lg font-semibold">{t("product.faq")}</h2>
-        <FaqAccordion items={DIGITAL_PRODUCT_FAQS} locale={locale} columns={2} />
-      </section>
-      <section className="mt-12">
-        <h2 className="mb-6 text-lg font-semibold">{t("product.related")}</h2>
-        <ProductRail products={related} />
-      </section>
+      {alsoBought.length ? (
+        <section className="mt-12 sm:mt-14">
+          <h2 className="mb-5 text-xl font-bold tracking-tight">{t("product.alsoBought")}</h2>
+          <ProductRail products={alsoBought} />
+        </section>
+      ) : null}
 
-      <div className="fixed inset-x-0 bottom-0 z-[35] border-t border-line bg-elevated/96 px-3 pt-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] backdrop-blur-md lg:hidden">
-        <div className="mx-auto flex max-w-lg items-center gap-2">
-          <div className="min-w-0">
-            <Price amount={price} locale={locale} />
-            <p className="truncate text-[11px] text-muted">{[regionName, denomLabel].filter(Boolean).join(" · ")}</p>
+      {mayLike.length ? (
+        <section className="mt-12 sm:mt-14">
+          <h2 className="mb-5 text-xl font-bold tracking-tight">{t("product.mayLike")}</h2>
+          <ProductRail products={mayLike} />
+        </section>
+      ) : null}
+
+      <div className="mt-10 flex justify-center">
+        <button
+          type="button"
+          className="inline-flex items-center gap-2 text-sm font-semibold text-brand-deep hover:text-fg"
+          onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}
+        >
+          <ArrowUp className="h-4 w-4" />
+          {t("product.backToTop")}
+        </button>
+      </div>
+
+      <div className="fixed inset-x-0 bottom-0 z-[35] border-t border-line bg-card/97 px-3 pt-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] shadow-[0_-12px_40px_rgba(23,24,43,0.12)] backdrop-blur-md">
+        <div className="container-mmh flex items-center gap-3">
+          <div className="hidden h-14 w-14 shrink-0 overflow-hidden rounded-xl border border-line bg-[#17182b] sm:block">
+            <ProductCover product={product} src={thumbSrc} shot="cover" compact label={productName} className="aspect-square h-full w-full p-0 [&_img]:p-1" />
           </div>
-          <Button className="min-h-11 min-w-0 flex-1 px-3 text-sm" disabled={!ready} onClick={() => add(false)}>
+          <div className="min-w-0 flex-1">
+            <p className="truncate text-sm font-semibold">{productName}</p>
+            <Price amount={price} locale={locale} className="mt-0.5 [&>span:first-child]:text-sm [&>span:first-child]:text-brand-deep" />
+          </div>
+          <div className="hidden md:block">
+            <QuantitySelector value={qty} onChange={setQty} max={5} />
+          </div>
+          <Button className="min-h-11 min-w-0 flex-1 px-3 text-sm sm:flex-none sm:min-w-[8.5rem]" disabled={!ready} onClick={addToCart}>
             {t("product.add")}
           </Button>
-          <Button className="min-h-11 shrink-0 px-3 text-sm" variant="outline" disabled={!ready} onClick={() => add(true)}>
+          <Button className="min-h-11 min-w-0 flex-1 px-3 text-sm sm:flex-none sm:min-w-[8.5rem]" variant="secondary" disabled={!ready} onClick={startBuyNow}>
             {t("product.buyNow")}
           </Button>
         </div>
       </div>
+
+      <LoginModal
+        open={loginOpen}
+        onClose={() => {
+          setLoginOpen(false);
+          setPendingBuy(null);
+        }}
+        onSuccess={() => {
+          setLoginOpen(false);
+          setPayOpen(true);
+        }}
+      />
+      <QuickPayModal
+        open={payOpen}
+        payload={pendingBuy}
+        onClose={() => {
+          setPayOpen(false);
+          setPendingBuy(null);
+        }}
+      />
     </div>
   );
 }

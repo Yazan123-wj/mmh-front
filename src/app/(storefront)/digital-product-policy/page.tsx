@@ -2,7 +2,7 @@ import { pageMeta } from "@/lib/seo";
 
 export const metadata = pageMeta(
   "Digital product policy",
-  "Region compatibility, code reveal, top-ups, and refund limitations. Placeholder pending legal review.",
+  "Region compatibility, code handling, top-ups, and current fulfillment limitations.",
   "/digital-product-policy",
 );
 
@@ -11,7 +11,7 @@ export default function DigitalPolicyPage() {
     <div className="container-mmh max-w-3xl py-10 text-sm leading-7 text-muted md:py-14">
       <h1 className="text-2xl font-semibold text-fg sm:text-3xl">Digital product policy</h1>
       <p className="mt-3 text-xs uppercase tracking-wide text-amber">
-        Placeholder content — requires final business and legal review. Not legal advice.
+        Interim content — requires final business and legal review. Not legal advice.
       </p>
       <p className="mt-6">
         MMH sells digital gaming codes, gift cards, wallet cards, subscriptions, and selected direct account top-ups.
@@ -23,20 +23,20 @@ export default function DigitalPolicyPage() {
         to match the receiving account.
       </p>
       <p className="mt-4">
-        Code reveal: once a code is shown in My Codes, emailed, or sent by SMS, it is treated as delivered. This demo
-        never generates a live issuer code. Reveal shows a fictional masked value only.
+        Code handling: the customer area never exposes a code unless the order is both paid and fulfilled. The current
+        storefront does not generate or reveal issuer codes because payment and live fulfillment are not connected.
       </p>
       <p className="mt-4">
         Direct top-ups: Player ID, User ID, Zone ID, and server fields must be exact. MMH cannot reverse a top-up sent
         to an incorrect account after it is submitted to a provider.
       </p>
       <p className="mt-4">
-        Used or redeemed codes, wrong-region purchases after reveal, and submitted top-ups are not refundable under this
-        placeholder policy. Contact support with your order number if a delivery fails on MMH’s side.
+        Used or redeemed codes, wrong-region purchases after reveal, and submitted top-ups would generally require special
+        handling under the final policy. Contact support with your order number once official support details are published.
       </p>
       <p className="mt-4">
-        Digital delivery in Phase 2 will use My Orders, email, or SMS according to the method selected at checkout. No
-        physical shipping and no Cash on Delivery apply to MMH digital products.
+        MMH products are digital. Physical shipping and Cash on Delivery do not apply. Live delivery channels will only be
+        described here after they are connected and verified.
       </p>
     </div>
   );

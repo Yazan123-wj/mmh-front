@@ -38,7 +38,10 @@ const kindMap: Record<string, ProductKind> = {
   DIGITAL_CODE: "digital_code",
 };
 
-export function mapCategory(row: DbCategory & { translations: CategoryTranslation[] }): Category {
+export function mapCategory(
+  row: DbCategory & { translations: CategoryTranslation[] },
+  parentSlug?: string,
+): Category {
   const en = row.translations.find((item) => item.locale === "en");
   const ar = row.translations.find((item) => item.locale === "ar");
   return {
@@ -49,7 +52,7 @@ export function mapCategory(row: DbCategory & { translations: CategoryTranslatio
     descriptionAr: ar?.description ?? "",
     href: row.href ?? `/category/${row.slug}`,
     artworkKey: row.artworkKey ?? "digital",
-    parent: undefined,
+    parent: parentSlug,
   };
 }
 
@@ -198,11 +201,26 @@ export async function loadPublishedBanners() {
   });
 }
 
+export async function loadPublishedFaqs() {
+  return prisma.fAQ.findMany({
+    where: { published: true },
+    include: { translations: true },
+    orderBy: { sortOrder: "asc" },
+  });
+}
+
+export async function loadHomepageSections() {
+  return prisma.homepageSection.findMany({ orderBy: { sortOrder: "asc" } });
+}
+
 export async function hydrateCatalogFromDb() {
   try {
     const [products, categories] = await Promise.all([loadPublishedCatalog(), loadPublishedCategories()]);
     const mapped = products.map(mapProduct);
-    const mappedCats = categories.map(mapCategory);
+    const slugById = new Map(categories.map((category) => [category.id, category.slug]));
+    const mappedCats = categories.map((category) =>
+      mapCategory(category, category.parentId ? slugById.get(category.parentId) : undefined),
+    );
     setCatalogSnapshot(mapped, mappedCats);
     return { products: mapped, categories: mappedCats };
   } catch {

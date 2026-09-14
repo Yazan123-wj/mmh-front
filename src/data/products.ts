@@ -1053,6 +1053,39 @@ export function getRelatedProducts(product: Product, limit = 8): Product[] {
   ).slice(0, limit);
 }
 
+export function getAlsoBoughtProducts(product: Product, limit = 6): Product[] {
+  const relatedIds = new Set(getRelatedProducts(product, 4).map((item) => item.id));
+  const samePlatform = catalog().filter(
+    (item) => item.id !== product.id && !relatedIds.has(item.id) && item.platform === product.platform,
+  );
+  const trending = catalog().filter(
+    (item) => item.id !== product.id && !relatedIds.has(item.id) && (item.trending || item.bestseller),
+  );
+  const merged = [...samePlatform, ...trending];
+  const seen = new Set<string>();
+  return merged.filter((item) => {
+    if (seen.has(item.id)) return false;
+    seen.add(item.id);
+    return true;
+  }).slice(0, limit);
+}
+
+export function getMayLikeProducts(product: Product, recentIds: string[], limit = 8): Product[] {
+  const exclude = new Set([product.id, ...getRelatedProducts(product, 8).map((item) => item.id)]);
+  const fromRecent = recentIds
+    .map((id) => getProductById(id))
+    .filter((item): item is Product => item != null && !exclude.has(item.id));
+  if (fromRecent.length >= 3) return fromRecent.slice(0, limit);
+  const fallback = catalog().filter((item) => !exclude.has(item.id) && (item.trending || item.featured));
+  const merged = [...fromRecent, ...fallback];
+  const seen = new Set<string>();
+  return merged.filter((item) => {
+    if (seen.has(item.id)) return false;
+    seen.add(item.id);
+    return true;
+  }).slice(0, limit);
+}
+
 export function searchProducts(query: string): Product[] {
   const q = query.trim().toLowerCase();
   if (!q) return [];

@@ -18,8 +18,8 @@ export default function AboutPage() {
           and Google Play. MMH does not own those platforms and is not officially affiliated with them unless stated later.
         </p>
         <p>
-          This website is Phase 1: a complete frontend. Payments, live code delivery, and provider top-ups connect in
-          Phase 2.
+          The current checkout records pending orders only. No payment gateway or automatic digital fulfillment is
+          connected, so no charge, code delivery, or supplier submission occurs from a storefront order.
         </p>
       </div>
     </div>

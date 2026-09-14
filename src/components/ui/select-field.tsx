@@ -18,6 +18,7 @@ import { createPortal } from "react-dom";
 interface SelectFieldProps extends Omit<SelectHTMLAttributes<HTMLSelectElement>, "children"> {
   label?: string;
   children?: ReactNode;
+  triggerClassName?: string;
 }
 
 interface OptionItem {
@@ -40,7 +41,7 @@ function readOptions(children: ReactNode): OptionItem[] {
   return items;
 }
 
-export function SelectField({ label, className, id, children, disabled, value, onChange, name, "aria-label": ariaLabel }: SelectFieldProps) {
+export function SelectField({ label, className, triggerClassName, id, children, disabled, value, onChange, name, "aria-label": ariaLabel }: SelectFieldProps) {
   const autoId = useId();
   const fieldId = id ?? name ?? autoId;
   const options = readOptions(children);
@@ -117,7 +118,7 @@ export function SelectField({ label, className, id, children, disabled, value, o
       aria-expanded={open}
       aria-label={label ?? ariaLabel}
       onClick={toggle}
-      className={cn(CONTROL, "relative flex items-center justify-between gap-3 pe-9 text-start")}
+      className={cn(CONTROL, "relative flex items-center justify-between gap-3 pe-9 text-start", triggerClassName)}
     >
       <span className="truncate">{selected?.label ?? ""}</span>
       <span className={cn("pointer-events-none absolute end-3 text-muted transition-transform", open && "rotate-180")} aria-hidden>

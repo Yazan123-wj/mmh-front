@@ -14,7 +14,7 @@ import { decryptSecret } from "@/server/crypto/codes";
 import { revalidatePath } from "next/cache";
 import { nanoid } from "nanoid";
 import { z } from "zod";
-import { FulfillmentType, ProductKind, PublishStatus, type AdminRole } from "@prisma/client";
+import { FulfillmentType, ProductKind, PublishStatus, type AdminRole, type Prisma } from "@prisma/client";
 import { headers } from "next/headers";
 import { hashPassword, validatePasswordStrength } from "@/server/auth/password";
 import { rateLimit } from "@/server/rate-limit";
@@ -141,6 +141,7 @@ const checkoutSchema = z.object({
   phone: z.string().min(6).max(32),
   notes: z.string().max(1000).optional(),
   idempotencyKey: z.string().min(8).max(200),
+  couponCode: z.string().trim().max(64).optional(),
   items: z
     .array(
       z.object({
@@ -187,16 +188,47 @@ export async function createPendingOrder(input: unknown) {
       subtotal = addFils(subtotal, lineTotal);
       lines.push({ variant, item, lineTotal });
     }
+    let coupon: Prisma.CouponGetPayload<{
+      include: { promotion: { include: { products: true } } };
+    }> | null = null;
+    let discountFils = 0;
+    if (parsed.couponCode) {
+      coupon = await tx.coupon.findUnique({
+        where: { code: parsed.couponCode.toUpperCase() },
+        include: { promotion: { include: { products: true } } },
+      });
+      const now = new Date();
+      if (
+        !coupon?.enabled ||
+        (coupon.promotion &&
+          (!coupon.promotion.enabled ||
+            (coupon.promotion.startsAt && coupon.promotion.startsAt > now) ||
+            (coupon.promotion.endsAt && coupon.promotion.endsAt < now)))
+      ) {
+        throw new Error("This coupon is not active.");
+      }
+      const eligibleIds = new Set(coupon.promotion?.products.map((row) => row.productId) ?? []);
+      const eligibleFils = lines.reduce(
+        (sum, line) => sum + (eligibleIds.size === 0 || eligibleIds.has(line.variant.productId) ? line.lineTotal : 0),
+        0,
+      );
+      const percentBps = coupon.percentBps ?? coupon.promotion?.percentBps ?? 0;
+      const amountFils = coupon.amountFils ?? coupon.promotion?.amountFils ?? 0;
+      discountFils = Math.min(eligibleFils, amountFils > 0 ? amountFils : Math.floor((eligibleFils * percentBps) / 10_000));
+      if (discountFils <= 0) throw new Error("This coupon does not apply to the selected products.");
+    }
+    const totalFils = subtotal - discountFils;
     const order = await tx.order.create({
       data: {
         number: `MMH-${nanoid(8).toUpperCase()}`,
-        userId: session?.user?.id,
+        userId: session?.user?.kind === "CUSTOMER" ? session.user.id : undefined,
         email: parsed.email,
         fullName: parsed.fullName,
         phone: parsed.phone,
         notes: parsed.notes,
         subtotalFils: subtotal,
-        totalFils: subtotal,
+        discountFils,
+        totalFils,
         paymentStatus: "PENDING",
         fulfillmentStatus: "NOT_STARTED",
         supplierStatus: "NOT_SUBMITTED",
@@ -215,7 +247,7 @@ export async function createPendingOrder(input: unknown) {
               ? {
                   create: Object.entries(item.fields).map(([key, value]) => ({
                     key,
-                    label: key,
+                    label: variant.product.fields.find((field) => field.key === key)?.labelEn ?? key,
                     value,
                     maskedValue: value.length > 4 ? `${value.slice(0, 2)}••••${value.slice(-2)}` : "••••",
                   })),
@@ -223,10 +255,13 @@ export async function createPendingOrder(input: unknown) {
               : undefined,
           })),
         },
-        payments: { create: { amountFils: subtotal, status: "PENDING", provider: "placeholder" } },
+        payments: { create: { amountFils: totalFils, status: "PENDING", provider: "not_connected" } },
         history: { create: { field: "paymentStatus", toValue: "PENDING", reason: "checkout" } },
       },
     });
+    if (coupon) {
+      await tx.couponRedemption.create({ data: { couponId: coupon.id, orderId: order.id } });
+    }
     return { orderNumber: order.number, id: order.id };
   });
 }

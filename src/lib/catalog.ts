@@ -1,4 +1,4 @@
-import { PRODUCTS, getProductsByCategory } from "@/data/products";
+import { PRODUCTS } from "@/data/products";
 import { discountPercent } from "@/lib/format";
 import type { FilterState, Product, SortOption } from "@/types";
 
@@ -27,8 +27,9 @@ export function applyFilters(products: Product[], filters: FilterState): Product
   }
 
   if (filters.category) {
-    const grouped = new Set(getProductsByCategory(filters.category).map((product) => product.id));
-    result = result.filter((product) => grouped.has(product.id));
+    result = result.filter(
+      (product) => product.category === filters.category || product.platform === filters.category,
+    );
   }
 
   if (filters.brand) {
