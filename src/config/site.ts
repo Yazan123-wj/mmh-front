@@ -23,6 +23,10 @@ export const SITE = {
     facebook: "#",
     tiktok: "#",
     youtube: "#",
+    /** Opens Telegram chat / channel */
+    telegram: "https://t.me/mmhstore",
+    /** Opens WhatsApp chat */
+    whatsapp: "https://wa.me/962790000000",
   },
   delivery: {
     estimate: "Issued after payment is confirmed. Live PIN delivery is not enabled in this environment.",

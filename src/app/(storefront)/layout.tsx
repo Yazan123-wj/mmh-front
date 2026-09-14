@@ -1,6 +1,7 @@
 import { Footer } from "@/components/layout/footer";
 import { Header } from "@/components/layout/header";
 import { AnnouncementBar } from "@/components/layout/announcement-bar";
+import { FloatingContactButtons } from "@/components/layout/floating-contact";
 import { CartDrawer } from "@/components/cart/cart-drawer";
 import { MobileMenu } from "@/components/navigation/mobile-menu";
 import { SearchOverlay } from "@/components/navigation/search-overlay";
@@ -26,6 +27,7 @@ export default async function StorefrontLayout({ children }: { children: React.R
           <Header />
           <main className="flex-1">{children}</main>
           <Footer />
+          <FloatingContactButtons />
           <CartDrawer />
           <MobileMenu />
           <SearchOverlay />
