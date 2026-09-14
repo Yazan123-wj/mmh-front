@@ -16,19 +16,17 @@ export function Hero() {
       aria-label={SITE.name}
     >
       <Image
-        src="/home/hero-banner.png"
+        src="/home/hero-banner.jpg"
         alt=""
         fill
         priority
+        quality={100}
+        unoptimized
         sizes="100vw"
         className="object-cover object-center"
       />
       <div
-        className="absolute inset-0 bg-[linear-gradient(180deg,rgba(23,24,43,0.55)_0%,rgba(23,24,43,0.35)_42%,rgba(23,24,43,0.82)_100%)]"
-        aria-hidden
-      />
-      <div
-        className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_70%_50%_at_50%_30%,transparent_0%,rgba(23,24,43,0.45)_100%)]"
+        className="absolute inset-0 bg-[linear-gradient(180deg,rgba(23,24,43,0.28)_0%,rgba(23,24,43,0.18)_40%,rgba(23,24,43,0.72)_100%)]"
         aria-hidden
       />
 
