@@ -1,15 +1,9 @@
 import { DigitalProductDetail } from "@/components/product/digital-detail";
-import { loadPublishedCatalog, mapProduct } from "@/server/catalog/map";
+import { resolveStorefrontProduct } from "@/server/catalog/resolve";
 import { pageMeta } from "@/lib/seo";
 import { notFound } from "next/navigation";
 import type { Metadata } from "next";
 import Script from "next/script";
-
-async function resolveProduct(slug: string) {
-  const products = await loadPublishedCatalog();
-  const row = products.find((item) => item.slug === slug);
-  return row ? mapProduct(row) : undefined;
-}
 
 export async function generateMetadata({
   params,
@@ -17,7 +11,7 @@ export async function generateMetadata({
   params: Promise<{ slug: string }>;
 }): Promise<Metadata> {
   const { slug } = await params;
-  const product = await resolveProduct(slug);
+  const product = await resolveStorefrontProduct(slug);
   if (!product) return pageMeta("Product", "MMH product");
   return {
     ...pageMeta(product.name, product.shortDescription, `/product/${slug}`),
@@ -30,7 +24,7 @@ export async function generateMetadata({
 
 export default async function ProductPage({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params;
-  const product = await resolveProduct(slug);
+  const product = await resolveStorefrontProduct(slug);
   if (!product) notFound();
   const jsonLd = {
     "@context": "https://schema.org",

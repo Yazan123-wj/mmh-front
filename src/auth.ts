@@ -7,6 +7,14 @@ import { rateLimit } from "@/server/rate-limit";
 import { writeAudit } from "@/server/audit";
 import type { AdminRole } from "@prisma/client";
 
+/** Public demo storefront login for client previews (works even without a seeded DB user). */
+export const DEMO_CUSTOMER = {
+  email: "demo@mmh.local",
+  password: "DemoCustomer1!",
+  id: "demo-customer",
+  name: "Demo Customer",
+} as const;
+
 declare module "next-auth" {
   interface Session {
     user: {
@@ -20,7 +28,7 @@ declare module "next-auth" {
 }
 
 export const { handlers, auth, signIn, signOut } = NextAuth({
-  adapter: PrismaAdapter(prisma),
+  ...(process.env.DATABASE_URL ? { adapter: PrismaAdapter(prisma) } : {}),
   session: { strategy: "jwt", maxAge: 60 * 60 * 8 },
   trustHost: true,
   pages: { signIn: "/admin/login" },
@@ -47,35 +55,51 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
           .toLowerCase();
         const password = String(credentials?.password ?? "");
         if (!rateLimit(`login:${email}`, 8, 15 * 60 * 1000)) {
-          await writeAudit({ action: "auth.login_rate_limited", entityType: "User", entityId: email });
+          await writeAudit({ action: "auth.login_rate_limited", entityType: "User", entityId: email }).catch(() => undefined);
           return null;
         }
-        const user = await prisma.user.findUnique({
-          where: { email },
-          include: { adminProfile: true },
-        });
-        if (!user?.passwordHash || user.disabled) {
-          await writeAudit({ action: "auth.login_failed", entityType: "User", entityId: email });
+
+        // Always allow the public demo customer for storefront client previews.
+        if (email === DEMO_CUSTOMER.email && password === DEMO_CUSTOMER.password) {
+          return {
+            id: DEMO_CUSTOMER.id,
+            email: DEMO_CUSTOMER.email,
+            name: DEMO_CUSTOMER.name,
+            kind: "CUSTOMER" as const,
+            role: null,
+          };
+        }
+
+        try {
+          const user = await prisma.user.findUnique({
+            where: { email },
+            include: { adminProfile: true },
+          });
+          if (!user?.passwordHash || user.disabled) {
+            await writeAudit({ action: "auth.login_failed", entityType: "User", entityId: email }).catch(() => undefined);
+            return null;
+          }
+          const ok = await verifyPassword(user.passwordHash, password);
+          if (!ok) {
+            await writeAudit({ action: "auth.login_failed", entityType: "User", entityId: email }).catch(() => undefined);
+            return null;
+          }
+          await writeAudit({
+            actorId: user.id,
+            action: "auth.login_success",
+            entityType: "User",
+            entityId: user.id,
+          }).catch(() => undefined);
+          return {
+            id: user.id,
+            email: user.email,
+            name: user.name,
+            kind: user.kind,
+            role: user.adminProfile?.role ?? null,
+          };
+        } catch {
           return null;
         }
-        const ok = await verifyPassword(user.passwordHash, password);
-        if (!ok) {
-          await writeAudit({ action: "auth.login_failed", entityType: "User", entityId: email });
-          return null;
-        }
-        await writeAudit({
-          actorId: user.id,
-          action: "auth.login_success",
-          entityType: "User",
-          entityId: user.id,
-        });
-        return {
-          id: user.id,
-          email: user.email,
-          name: user.name,
-          kind: user.kind,
-          role: user.adminProfile?.role ?? null,
-        };
       },
     }),
   ],

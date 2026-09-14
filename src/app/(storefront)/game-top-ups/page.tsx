@@ -1,7 +1,7 @@
 import { CategoryListing } from "@/components/shop/category-listing";
 import { parseFilterParams } from "@/lib/catalog";
 import { pageMeta } from "@/lib/seo";
-import { loadPublishedCategories, mapCategory } from "@/server/catalog/map";
+import { resolveStorefrontCategories } from "@/server/catalog/resolve";
 import { queryPublishedProducts } from "@/server/catalog/query";
 
 export const metadata = pageMeta(
@@ -18,15 +18,11 @@ export default async function GameTopUpsPage({
   const params = await searchParams;
   const filters = parseFilterParams(params);
   const products = await queryPublishedProducts(filters, "game-top-ups");
-  const rows = await loadPublishedCategories();
-  const mobile = rows.find((item) => item.slug === "mobile-games");
-  const subcategories = (
-    mobile
-      ? rows.filter((item) => item.parentId === mobile.id)
-      : rows.filter((item) => !item.parentId)
-  )
-    .map((item) => mapCategory(item))
-    .map((item) => ({ href: item.href, label: item.name }));
+  const categories = await resolveStorefrontCategories();
+  const mobileChildren = categories.filter((item) => item.parent === "mobile-games");
+  const subcategories = (mobileChildren.length ? mobileChildren : categories.filter((item) => !item.parent)).map(
+    (item) => ({ href: item.href, label: item.name }),
+  );
 
   return (
     <CategoryListing

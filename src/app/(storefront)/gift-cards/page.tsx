@@ -1,7 +1,7 @@
 import { CategoryListing } from "@/components/shop/category-listing";
 import { parseFilterParams } from "@/lib/catalog";
 import { pageMeta } from "@/lib/seo";
-import { loadPublishedCategories, mapCategory } from "@/server/catalog/map";
+import { resolveStorefrontCategories } from "@/server/catalog/resolve";
 import { queryPublishedProducts } from "@/server/catalog/query";
 
 export const metadata = pageMeta(
@@ -18,11 +18,10 @@ export default async function GiftCardsPage({
   const params = await searchParams;
   const filters = parseFilterParams(params);
   const products = await queryPublishedProducts(filters, "gift-cards");
-  const rows = await loadPublishedCategories();
-  const subcategories = rows
-    .filter((item) => !item.parentId)
+  const categories = await resolveStorefrontCategories();
+  const subcategories = categories
+    .filter((item) => !item.parent)
     .slice(0, 8)
-    .map((item) => mapCategory(item))
     .map((item) => ({ href: item.href, label: item.name }));
 
   return (

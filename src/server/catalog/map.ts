@@ -221,10 +221,15 @@ export async function hydrateCatalogFromDb() {
     const mappedCats = categories.map((category) =>
       mapCategory(category, category.parentId ? slugById.get(category.parentId) : undefined),
     );
-    setCatalogSnapshot(mapped, mappedCats);
-    return { products: mapped, categories: mappedCats };
+    if (mapped.length) {
+      setCatalogSnapshot(mapped, mappedCats.length ? mappedCats : []);
+      return { products: mapped, categories: mappedCats };
+    }
   } catch {
-    // Frontend preview / missing DATABASE_URL — callers should fall back to static catalog data.
-    return { products: [], categories: [] };
+    // Frontend preview / missing DATABASE_URL — fall back to static catalog.
   }
+  const { PRODUCTS } = await import("@/data/products");
+  const { CATEGORIES } = await import("@/data/categories");
+  setCatalogSnapshot(PRODUCTS, CATEGORIES);
+  return { products: PRODUCTS, categories: CATEGORIES };
 }

@@ -3,7 +3,7 @@ import { parseFilterParams } from "@/lib/catalog";
 import { pageMeta } from "@/lib/seo";
 import { notFound } from "next/navigation";
 import type { Metadata } from "next";
-import { loadPublishedCategories, mapCategory } from "@/server/catalog/map";
+import { resolveStorefrontCategories } from "@/server/catalog/resolve";
 import { queryPublishedProducts } from "@/server/catalog/query";
 
 export async function generateMetadata({
@@ -12,9 +12,8 @@ export async function generateMetadata({
   params: Promise<{ slug: string }>;
 }): Promise<Metadata> {
   const { slug } = await params;
-  const rows = await loadPublishedCategories();
-  const row = rows.find((item) => item.slug === slug);
-  const category = row ? mapCategory(row) : undefined;
+  const categories = await resolveStorefrontCategories();
+  const category = categories.find((item) => item.slug === slug);
   if (!category) return pageMeta("Category", "MMH category", "/shop");
   return pageMeta(category.name, category.description, `/category/${slug}`);
 }
@@ -27,22 +26,18 @@ export default async function CategoryPage({
   searchParams: Promise<Record<string, string | string[] | undefined>>;
 }) {
   const { slug } = await params;
-  const rows = await loadPublishedCategories();
-  const row = rows.find((item) => item.slug === slug);
-  const category = row ? mapCategory(row) : undefined;
-  if (!category || !row) notFound();
+  const categories = await resolveStorefrontCategories();
+  const category = categories.find((item) => item.slug === slug);
+  if (!category) notFound();
 
   const query = await searchParams;
   const filters = { ...parseFilterParams(query), category: slug };
   const source = await queryPublishedProducts(filters, slug);
 
-  const children = rows.filter((item) => item.parentId === row.id).map((item) => mapCategory(item, slug));
-  const siblings =
-    row.parentId
-      ? rows
-          .filter((item) => item.parentId === row.parentId && item.id !== row.id)
-          .map((item) => mapCategory(item))
-      : [];
+  const children = categories.filter((item) => item.parent === slug);
+  const siblings = category.parent
+    ? categories.filter((item) => item.parent === category.parent && item.slug !== slug)
+    : [];
   const subcategories = (children.length ? children : siblings).map((item) => ({
     href: item.href,
     label: item.name,
