@@ -40,10 +40,12 @@ export function QuickPayModal({
   const [cvc, setCvc] = useState("");
   const [placing, setPlacing] = useState(false);
   const [error, setError] = useState("");
+  const [confirmed, setConfirmed] = useState(false);
 
   const close = useCallback(() => {
     if (placing) return;
     setError("");
+    setConfirmed(false);
     onClose();
   }, [onClose, placing]);
 
@@ -118,11 +120,21 @@ export function QuickPayModal({
           <p className="text-xs leading-5 text-muted">{t("buy.cardDemo")}</p>
         </div>
 
+        <label className="mt-5 flex cursor-pointer items-start gap-3 rounded-xl border border-line bg-elevated p-4 text-sm leading-5 text-muted">
+          <input
+            type="checkbox"
+            className="mt-0.5 h-4 w-4 shrink-0 accent-[#F7C037]"
+            checked={confirmed}
+            onChange={(event) => setConfirmed(event.target.checked)}
+          />
+          <span>{t("product.confirmCombined")}</span>
+        </label>
+
         {error ? <p className="mt-3 text-sm text-danger">{error}</p> : null}
 
         <Button
           className="mt-6 w-full"
-          disabled={placing}
+          disabled={placing || !confirmed}
           onClick={async () => {
             if (!session?.user?.email) {
               setError(t("buy.needLogin"));
@@ -130,6 +142,10 @@ export function QuickPayModal({
             }
             if (!isValidDemoPhone(phone)) {
               setError(t("checkout.invalidPhone"));
+              return;
+            }
+            if (!confirmed) {
+              setError(t("checkout.required"));
               return;
             }
             setPlacing(true);

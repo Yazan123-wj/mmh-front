@@ -247,7 +247,7 @@ html[data-input="keyboard"] .mmh-focus:focus-visible {
 }
 
 .category-marquee {
-  animation: category-marquee 55s linear infinite;
+  animation: category-marquee 70s linear infinite;
 }
 
 .category-marquee:hover,

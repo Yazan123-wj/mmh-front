@@ -2,6 +2,7 @@
 
 import { LoginModal } from "@/components/auth/login-modal";
 import { QuickPayModal, type QuickBuyPayload } from "@/components/checkout/quick-pay-modal";
+import { CompleteOrderBundle } from "@/components/product/complete-order-bundle";
 import { ProductGallery } from "@/components/product/product-gallery";
 import { ProductCover } from "@/components/product/product-artwork";
 import { ProductRail } from "@/components/product/product-card";
@@ -33,7 +34,6 @@ import { choiceClass, FOCUS_RING, ICON_HIT } from "@/components/ui/control";
 import { cn } from "@/lib/cn";
 
 const EMPTY_RECENT_IDS: string[] = [];
-const PAYMENT_METHODS = ["Visa", "Mastercard", "Apple Pay", "CliQ"] as const;
 
 function deliveryLabel(method: DeliveryMethod, t: (key: string) => string) {
   if (method === "email") return t("common.emailDelivery");
@@ -81,7 +81,6 @@ export function DigitalProductDetail({ product }: { product: Product }) {
   const [contact, setContact] = useState("");
   const [fields, setFields] = useState<Record<string, string>>({});
   const [guideId, setGuideId] = useState<string | null>(null);
-  const [confirmed, setConfirmed] = useState(false);
   const [qty, setQty] = useState(1);
   const [panelTab, setPanelTab] = useState<PanelTab>("options");
   const wished = has(product.id);
@@ -127,7 +126,7 @@ export function DigitalProductDetail({ product }: { product: Product }) {
     validateCustomerField(field.id, fields[field.id] ?? "", field.required),
   );
   const stockOk = denomination?.inStock !== false;
-  const ready = Boolean(regionId && denominationId && confirmed && contactOk && fieldsOk && stockOk);
+  const ready = Boolean(regionId && denominationId && contactOk && fieldsOk && stockOk);
 
   const price = useMemo(() => (denomination?.priceJod ?? product.priceJod) * qty, [denomination, product.priceJod, qty]);
   const platformName = locale === "ar" ? options.platformLabelAr : options.platformLabel;
@@ -148,11 +147,9 @@ export function DigitalProductDetail({ product }: { product: Product }) {
           ? t("gift.needRecipient")
           : needsContact && !contactOk
             ? t("product.needContact")
-            : !confirmed
-              ? t("product.needConfirm")
-              : !stockOk
-                ? t("product.stockOut")
-                : null;
+            : !stockOk
+              ? t("product.stockOut")
+              : null;
 
   const selectRegion = (id: string) => {
     setRegionId(id);
@@ -221,16 +218,6 @@ export function DigitalProductDetail({ product }: { product: Product }) {
         </button>
       </div>
 
-      <label className="flex cursor-pointer items-start gap-3 text-sm leading-5 text-muted">
-        <input
-          type="checkbox"
-          className={cn("mt-0.5 h-4 w-4 shrink-0 accent-[#F7C037]", FOCUS_RING)}
-          checked={confirmed}
-          onChange={(event) => setConfirmed(event.target.checked)}
-        />
-        <span>{t("product.confirmCombined")}</span>
-      </label>
-
       <div className="flex items-center justify-between gap-3 rounded-xl bg-brand-deep px-4 py-3.5 text-white">
         <span className="text-sm font-medium text-white/75">{t("product.optionPrice")}</span>
         <Price
@@ -257,17 +244,6 @@ export function DigitalProductDetail({ product }: { product: Product }) {
         <Button className="min-h-12 flex-1" variant="outline" disabled={!ready} onClick={startBuyNow}>
           {t("product.buyNow")}
         </Button>
-      </div>
-
-      <div className="flex flex-wrap items-center justify-center gap-2 border-t border-line pt-4">
-        {PAYMENT_METHODS.map((methodName) => (
-          <span
-            key={methodName}
-            className="inline-flex min-h-8 items-center rounded-md border border-line bg-elevated px-2.5 text-[11px] font-semibold text-muted"
-          >
-            {methodName}
-          </span>
-        ))}
       </div>
     </>
   );
@@ -568,6 +544,8 @@ export function DigitalProductDetail({ product }: { product: Product }) {
               ) : null}
             </div>
           </div>
+
+          <CompleteOrderBundle product={product} suggestions={alsoBought.length ? alsoBought : similar} />
         </div>
       </div>
 
@@ -575,13 +553,6 @@ export function DigitalProductDetail({ product }: { product: Product }) {
         <section className="mt-12 sm:mt-14">
           <h2 className="mb-5 text-xl font-bold tracking-tight">{t("product.similar")}</h2>
           <ProductRail products={similar} />
-        </section>
-      ) : null}
-
-      {alsoBought.length ? (
-        <section className="mt-12 sm:mt-14">
-          <h2 className="mb-5 text-xl font-bold tracking-tight">{t("product.alsoBought")}</h2>
-          <ProductRail products={alsoBought} />
         </section>
       ) : null}
 

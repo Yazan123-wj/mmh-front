@@ -139,13 +139,16 @@ export function CheckoutView() {
           <div className="mt-8 space-y-3 text-sm">
             <p className="break-words"><strong>{draft.customer.fullName}</strong> · {draft.customer.email} · {draft.customer.phone}</p>
             <p className="rounded-xl border border-line bg-card p-3 text-muted">{t("checkout.payNote")}</p>
-            <label className="flex items-start gap-2">
-              <input type="checkbox" checked={draft.regionConfirmed} onChange={(event) => patch({ regionConfirmed: event.target.checked })} />
-              {t("checkout.confirmAll")}
-            </label>
-            <label className="flex items-start gap-2">
-              <input type="checkbox" checked={draft.refundConfirmed} onChange={(event) => patch({ refundConfirmed: event.target.checked })} />
-              {t("product.confirmRefund")}
+            <label className="flex cursor-pointer items-start gap-3 rounded-xl border border-line bg-card p-4 leading-5 text-muted">
+              <input
+                type="checkbox"
+                className="mt-0.5 h-4 w-4 shrink-0 accent-[#F7C037]"
+                checked={draft.regionConfirmed && draft.refundConfirmed}
+                onChange={(event) =>
+                  patch({ regionConfirmed: event.target.checked, refundConfirmed: event.target.checked })
+                }
+              />
+              <span>{t("product.confirmCombined")}</span>
             </label>
             {errors.confirm || errors.refund ? <p className="text-xs text-danger">{t("checkout.required")}</p> : null}
           </div>

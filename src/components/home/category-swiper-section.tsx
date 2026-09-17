@@ -29,10 +29,10 @@ export function CategorySwiperSection() {
         <p className="mx-auto mt-2 max-w-xl text-center text-sm text-muted">{t("home.categoriesSubtitle")}</p>
       </div>
 
-      <div className="relative overflow-hidden [mask-image:linear-gradient(90deg,transparent,black_6%,black_94%,transparent)]">
+      <div className="relative overflow-hidden [mask-image:linear-gradient(90deg,transparent,black_5%,black_95%,transparent)]">
         <div
           className={cn(
-            "category-marquee flex w-max gap-6 pe-6 sm:gap-8 sm:pe-8",
+            "category-marquee flex w-max gap-5 pe-5 sm:gap-7 sm:pe-7 lg:gap-8 lg:pe-8",
             active && "category-marquee-paused",
           )}
         >
@@ -42,12 +42,12 @@ export function CategorySwiperSection() {
               type="button"
               onClick={() => setActive(item)}
               className={cn(
-                "group flex w-[8.5rem] shrink-0 flex-col items-center gap-3 rounded-2xl sm:w-[10.5rem]",
+                "group flex w-[min(42vw,11.5rem)] shrink-0 flex-col items-center gap-3 rounded-2xl sm:w-[min(28vw,14.5rem)] lg:w-[min(22vw,17rem)]",
                 FOCUS_RING,
               )}
             >
-              <span className="relative flex h-[8.5rem] w-[8.5rem] items-center justify-center rounded-full bg-[radial-gradient(circle_at_35%_30%,#3a3b63,#17182b_70%)] p-[3px] shadow-[0_0_0_1px_rgba(247,192,55,0.35),0_12px_28px_rgba(0,0,0,0.35)] transition group-hover:shadow-[0_0_0_2px_rgba(247,192,55,0.55),0_16px_36px_rgba(0,0,0,0.4)] sm:h-[10.5rem] sm:w-[10.5rem]">
-                <span className="relative h-full w-full overflow-hidden rounded-full border border-brand/40 bg-[#17182b]">
+              <span className="relative aspect-square w-full rounded-full bg-[radial-gradient(circle_at_35%_30%,#3a3b63,#17182b_70%)] p-[3px] shadow-[0_0_0_1px_rgba(247,192,55,0.35),0_12px_28px_rgba(0,0,0,0.35)] transition group-hover:shadow-[0_0_0_2px_rgba(247,192,55,0.55),0_16px_36px_rgba(0,0,0,0.4)] sm:p-[4px]">
+                <span className="relative block h-full w-full overflow-hidden rounded-full border border-brand/40 bg-[#17182b]">
                   <CategoryTileImage
                     src={item.image}
                     alt=""
@@ -56,7 +56,7 @@ export function CategorySwiperSection() {
                   />
                 </span>
               </span>
-              <span className="line-clamp-2 min-h-8 text-center text-sm font-semibold leading-4 text-fg sm:text-base sm:leading-5">
+              <span className="line-clamp-2 min-h-8 text-center text-sm font-semibold leading-4 text-fg sm:min-h-10 sm:text-base sm:leading-5 lg:text-lg">
                 {t(item.labelKey)}
               </span>
             </button>
