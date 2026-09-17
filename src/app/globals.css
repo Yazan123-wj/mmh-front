@@ -237,6 +237,30 @@ html[data-input="keyboard"] .mmh-focus:focus-visible {
   }
 }
 
+@keyframes category-marquee {
+  from {
+    transform: translateX(0);
+  }
+  to {
+    transform: translateX(-50%);
+  }
+}
+
+.category-marquee {
+  animation: category-marquee 55s linear infinite;
+}
+
+.category-marquee:hover,
+.category-marquee-paused {
+  animation-play-state: paused;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .category-marquee {
+    animation: none;
+  }
+}
+
 .filter-scroll {
   scrollbar-width: thin;
   scrollbar-color: rgba(184, 186, 210, 0.28) transparent;

@@ -1,4 +1,5 @@
 import { Hero } from "@/components/home/hero";
+import { CategorySwiperSection } from "@/components/home/category-swiper-section";
 import { HomePromoBanner } from "@/components/home/home-promo-banner";
 import { HomeSupportCta } from "@/components/home/home-support-cta";
 import { HomeTestimonials } from "@/components/home/home-testimonials";
@@ -20,6 +21,7 @@ export default function HomePage() {
       <Hero />
       <HomePromoBanner />
       <PlatformQuickLinks />
+      <CategorySwiperSection />
       <LatestProducts />
       <ServiceCategoryGrid />
       <SuggestedGamesGrid />
