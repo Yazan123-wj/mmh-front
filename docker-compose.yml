@@ -4,7 +4,7 @@ services:
     container_name: mmh-postgres
     restart: unless-stopped
     environment:
-      POSTGRES_DB: mmh_development
+      POSTGRES_DB: mmh
       POSTGRES_USER: mmh
       POSTGRES_PASSWORD: mmh_dev_only
     ports:
@@ -12,7 +12,7 @@ services:
     volumes:
       - mmh_pg_data:/var/lib/postgresql/data
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U mmh -d mmh_development"]
+      test: ["CMD-SHELL", "pg_isready -U mmh -d mmh"]
       interval: 5s
       timeout: 5s
       retries: 10

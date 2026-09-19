@@ -1,30 +1,99 @@
 # MMH
 
-Jordanian digital-code storefront (MMH) plus the Clicks Digitals admin at `/admin`.
+Monorepo for the MMH digital storefront and commerce API.
 
-This is a full-stack Next.js 16 app with PostgreSQL, Prisma, and Auth.js. The public storefront keeps the approved MMH navy/purple/yellow theme. Admin uses the Clicks Digitals identity only.
+```text
+Browser → Next.js (frontend :3001) → Django REST (backend :8000) → PostgreSQL
+```
+
+**Prisma is not part of the active architecture.** The frontend never talks to PostgreSQL.
+
+## Status
+
+| Track | Status |
+| --- | --- |
+| Production infrastructure | Prepared — see [docs/DEPLOYMENT.md](docs/DEPLOYMENT.md) |
+| Commerce go-live | **BLOCKED** — payment integration owned by external developer |
+
+Payment handoff: [docs/PAYMENT_INTEGRATION_HANDOFF.md](docs/PAYMENT_INTEGRATION_HANDOFF.md)  
+OneEpin live purchasing remains **locked** until payment + fulfillment go-live.
+
+## Layout
+
+```text
+mmh-front/
+├── frontend/   # Next.js UI only
+├── backend/    # Django + DRF + SimpleJWT
+├── docs/
+└── docker-compose.yml
+```
+
+## Ports
+
+| Service | Port |
+| --- | --- |
+| Frontend | 3001 |
+| Django API | 8000 |
+| PostgreSQL | 5432 |
 
 ## Run locally
 
+### 1. PostgreSQL
+
 ```bash
+docker compose up -d
+```
+
+### 2. Backend
+
+```bash
+cd backend
+python3 -m venv .venv
+source .venv/bin/activate
+pip install -r requirements.txt
 cp .env.example .env
-# fill DATABASE_URL, AUTH_SECRET, CODE_ENCRYPTION_KEY, BOOTSTRAP_ADMIN_*
-npx prisma generate
-npx prisma migrate dev
-npx prisma db seed
+python manage.py migrate
+python manage.py seed_catalog
+python manage.py runserver 8000
+```
+
+API base: `http://localhost:8000/api/v1/`  
+Health: `http://localhost:8000/api/health/`
+
+Demo customer (development seed): `demo@mmh.local` / `DemoCustomer1!`  
+Demo checkout auto-pay is enabled only when `ALLOW_DEMO_AUTO_PAYMENT=true` (dev default).
+
+### 3. Frontend
+
+```bash
+cd frontend
+npm install
+cp .env.example .env.local
 npm run dev
 ```
 
-Open [http://localhost:3001](http://localhost:3001) and [http://localhost:3001/admin/login](http://localhost:3001/admin/login).
+Required: `NEXT_PUBLIC_API_URL=http://127.0.0.1:8000/api/v1`
 
-Dev and start scripts are pinned to port **3001**.
+## Docs
 
-Backend setup, roles, storage, backups, and the 1Epin static-IP note: [docs/BACKEND.md](docs/BACKEND.md).
+| Doc | Purpose |
+| --- | --- |
+| [DEPLOYMENT.md](docs/DEPLOYMENT.md) | Production deploy units & steps |
+| [PAYMENT_INTEGRATION_HANDOFF.md](docs/PAYMENT_INTEGRATION_HANDOFF.md) | Payment developer contract |
+| [BACKUP_RESTORE.md](docs/BACKUP_RESTORE.md) | Postgres + encryption key backup |
+| [MEDIA_STORAGE.md](docs/MEDIA_STORAGE.md) | Media persistence |
+| [STATIC_FALLBACK.md](docs/STATIC_FALLBACK.md) | Static catalog fallback policy |
+| [CODE_INVENTORY.md](docs/CODE_INVENTORY.md) | Digital code inventory |
+| [ARCHITECTURE.md](docs/ARCHITECTURE.md) | System overview |
 
-```bash
-npm run lint
-npm run typecheck
-npm test
-npm run build
-npm start
-```
+## Authentication
+
+1. Storefront signs in via NextAuth credentials  
+2. NextAuth calls Django `POST /auth/token/` (SimpleJWT)  
+3. Access token lives on the NextAuth session for API calls  
+
+Admin REST: `/api/v1/admin/` (JWT + RBAC).
+
+## Money & codes
+
+Integer **fils** only (1 JOD = 1000 fils). Digital codes are AES-GCM encrypted; reveal is permission-gated and audited. Protect `CODE_ENCRYPTION_KEY` independently of DB backups.
